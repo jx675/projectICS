@@ -6,7 +6,6 @@ import os
 path = os.getcwd()
 player = Minim(this)
 
-
 #Variables to keep track of position and speed of ball
 Class Ball:
      def __init__(self,x,y,vx,vy):
@@ -15,7 +14,7 @@ Class Ball:
         self.vx=vx
         self.vy=vy
 
-     def update(self,):
+     def update(self):
         self.x += self.vx
         self.y += vy
         
@@ -26,8 +25,7 @@ Class Ball:
             vy=-vy
             
         if x > width or x <0:
-            vx=-vx
-            
+            vx=-vx        
 
 # Called every re-draw, defaul 30 times per second
     def display(self): 
@@ -45,36 +43,51 @@ Class Ball:
     # Update position by adding speed
 
 Class Paddle:
-    def __init__(self,x,y,w,vx):
-        self.x=x
-        self.y=y
-        self.vx=vx
+    # x_paddle,y_paddle are the center cooridinates of the paddle
+    def __init__(self,x_paddle,y_paddle,w_paddle_half,h_paddle_half,vx_paddle):
+        self.x_paddle=x_paddle
+        self.y_paddle=y_paddle
+        self.vx_paddle_half=vx_paddle_half
         
     def display(self): 
-   
         if keyCode == RIGHT or key == 'd': 
-            x = x + 5;
+            x_paddle = x_paddle + 5;
       # Move paddle right
     
         elif keyCode == LEFT or key == 'a':
       # Move paddle left
-            x = x - 5;
-      # make sure paddle dont go outside  
-        if x> width:
-            x= width
-        elif x<0:
-            x=0
+            x_paddle = x_paddle - 5;
+     
+       # make sure paddle dont go outside at the edge
+        if x_paddle> width:
+            x_paddle= width
+        elif x_paddle<0:
+            x_paddle=0
     
         #Clear screen to black
         #background(0);
         # Set fill color to white
         fill(255);
         # draw paddle
-        rect(x, y, w+1, 11)
-  
+        rect(x_paddle, y_paddle, w_paddle*2+1, 11)
+ 
+def blocks():
+    Number_of_blocks = 20
+    
+    for i in range(8):
+        self.blocks.append(Block(300,300,20,self.g,"star.png",40,40,6,360/8*i,150))
+        x = i%100+10
+        y= 40*(i/5)+10
+        rect(x+40,y+19,80,20)
+    
+      
+
+
 def setup():
     size(w,h)
     background(0)
+    
+    rectMode(CENTER)
     
 def draw():
 
@@ -83,8 +96,13 @@ def draw():
     textAlign(LEFT);
     text(score, 90, 390);
 
-
-# def keyPressed():
+def collides():
+    if x_paddle - w_paddle_half < x < x_paddle + w_paddle_half and y_paddle-h_paddle_half < y < y_paddle + h_paddle_half:
+        vy = -vy
+    
+# ball hit the rectangle 
+    
+    def keyPressed():
 #     if keyCode == LEFT:
    
 #     elif keyCode == RIGHT:
