@@ -9,16 +9,16 @@ class Ball:
         self.vy=-vy
         
     def update(self):
-       
-       
+
         #make sure the ball doesn't go outrange// <0 b/c top left is 0,0
         if self.y - (self.h/2) <0:  
              self.vy=-self.vy
+             
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
         if self.y > p.yPaddle and p.xPaddle<self.x<p.xPaddle+p.wPaddle: #figure out how to make it 'bounce' off surface 
             if self.x < p.xPaddle + p.wPaddle/2:
                 self.vx = -8
-            elif self.x >  p.xPaddle + p.wPaddle/2:
+            elif self.x > p.xPaddle + p.wPaddle/2:
                 self.vx = 8
             elif self.x == p.xPaddle + p.wPaddle/2:
                 self.vx = 0
@@ -35,14 +35,24 @@ class Ball:
              self.vx=-self.vx  
              
           #collisions with bricks   
-        if self.y + (self.h/2) < br.y + (br.h) and br.x<self.x<br.x+br.w:
-            if self.x < br.x + br.w/2:
-                self.vx = -8
-            elif self.x >  br.x + br.w/2:
-                self.vx = 8
-            elif self.x == br.x + br.w/2:
-                self.vx = 0
-            self.vy = -self.vy
+        if br.x<self.x<br.x+br.w and (self.y == br.y):
+                if self.x < br.x + br.w/2:
+                    self.vx = -8
+                elif self.x >  br.x + br.w/2:
+                    self.vx = 8
+                elif self.x == br.x + br.w/2:
+                    self.vx = 0
+                self.vy = -self.vy
+            
+            
+        # elif (self.y + (self.h/2) == br.y + (br.h) and br.x<self.x<br.x+br.w):
+        #     if self.x < br.x + br.w/2:
+        #         self.vx = -8
+        #     elif self.x >  br.x + br.w/2:
+        #         self.vx = 8
+        #     elif self.x == br.x + br.w/2:
+        #         self.vx = 0
+        #     self.vy = -self.vy
              
         
    # Update position by adding speed to x and y 
@@ -100,9 +110,6 @@ class Bricks:
         fill(0,255,0)
         rect(self.x,self.y,self.w,self.h)
         
-    
-    
-
 def setup():
     size(720,720)
     background(0)
@@ -112,8 +119,7 @@ def setup():
     #ellipse(b.x,b.y,50,50)
 
 p = Paddle(360,700,200,150,5,1)
-br = Bricks(360,100,150,50,255,5)
-
+br = Bricks(360,500,150,50,255,5)
 balls = []
 
 def draw():
@@ -131,8 +137,8 @@ def keyPressed():
         
     if keyCode == UP:
         #so that only one ball is released
-        while len(balls) < 1:
-            balls.append(Ball(25,25,p.xPaddle+(p.wPaddle/2),p.yPaddle,1,5,False))
+        # while len(balls) < 1:
+        balls.append(Ball(25,25,p.xPaddle+(p.wPaddle/2),(p.yPaddle-12.5),1,5,False))
             
         
 def keyReleased():
