@@ -1,19 +1,21 @@
 import os
 class Ball:
-    def __init__(self,w,h,x,y,vx,vy,blnMissed):
+    def __init__(self,w,h,x,y,vx,vy):
         self.w = w
         self.h = h
         self.x=x
         self.y=y
         self.vx=vx
         self.vy=-vy
+        self.ballReleased = False
+        self.blnMissed = False
         
     def update(self):
-
+        
         #make sure the ball doesn't go outrange// <0 b/c top left is 0,0
         if self.y - (self.h/2) <0:  
              self.vy=-self.vy
-             
+    
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
         if self.y > g.p.yPaddle and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: #figure out how to make it 'bounce' off surface 
             if self.x < g.p.xPaddle + g.p.wPaddle/2:
@@ -26,9 +28,12 @@ class Ball:
           
         #what to do if ball goes below paddle
         if self.y + (self.h/2) > height:
-            blnMissed = True #deal with this condition
-            self.x=g.p.xPaddle + (g.p.wPaddle/2)
-            self.y=g.p.yPaddle
+            self.blnMissed = True #deal with this condition
+            self.ballReleased = False
+            self.x=g.p.xPaddle + (g.p.wPaddle/2) 
+            self.y= g.p.yPaddle-(g.bH/2)
+            self.vy = 0
+            self.vx = 0
     
         #make sure ball stays inside width of box
         if self.x + (self.w/2) > width or self.x - (self.w/2) <0:
@@ -37,8 +42,6 @@ class Ball:
         #collisions with bricks
         for br in g.br:  
             if br.x<self.x<br.x+br.w and (br.y<self.y<br.y+br.h or self.y == br.y):
-                br.numCollisions += 1 #FIX THIS.. WHY IS IT COUNTING SO MANY
-                print(br.numCollisions)
                 if self.x < br.x + br.w/2:
                     self.vx = -8
                 elif self.x >  br.x + br.w/2:
@@ -46,7 +49,13 @@ class Ball:
                 elif self.x == br.x + br.w/2:
                     self.vx = 0
                 self.vy = -self.vy
-            
+                br.numCollisions += 1 
+        
+        #keep the ball on the platform
+        if self.ballReleased == False and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle and self.y==g.p.yPaddle-(g.bH/2) and (g.p.keyHandler[RIGHT] == True or g.p.keyHandler[LEFT] == True):
+            self.x = g.p.xPaddle + g.p.wPaddle/2
+            #print(self.vx)
+
    # Update position by adding speed to x and y 
         self.x += self.vx
         self.y += self.vy
@@ -55,13 +64,11 @@ class Ball:
     def display(self):
         self.update()
         stroke(255)
-        # Set fill color to white
-        #fill(255)
         # Draw a circle at position x,y 25 pixels large
         ellipse(self.x,self.y,self.w,self.h)
 
 class Paddle:
-    # x_paddle,y_paddle are the center cooridinates of the paddle
+    # x_paddle,y_paddle are the cooridinates of the paddle
     def __init__(self,xPaddle,yPaddle,wPaddle,hPaddle,vx_paddle,dir):
         self.xPaddle=xPaddle
         self.yPaddle=yPaddle
@@ -77,6 +84,7 @@ class Paddle:
             self.xPaddle += self.vx_paddle
         elif self.keyHandler[LEFT] ==True and self.xPaddle >0 :
             self.xPaddle -= self.vx_paddle
+           
         
     def display(self):
         self.update() 
@@ -87,12 +95,11 @@ class Paddle:
         rect(self.xPaddle,self.yPaddle, self.wPaddle,self.hPaddle)
         
 class Bricks:
-    def __init__(self,x,y,w,h,numBricks):
+    def __init__(self,x,y,w,h):
         self.w = w
         self.h = h
         self.x = x
         self.y = y
-        self.numBricks = numBricks
         self.numCollisions = 0 
         self.fRed = 0
         self.fGreen = 0
@@ -107,12 +114,12 @@ class Bricks:
             self.fRed = 255
             self.fGreen = 230
             self.fBlue = 0
-        # elif self.numCollisions == 2:
-        #     self.fRed = 255
-        #     self.fGreen = 0
-        #     self.fBlue = 0
-        # elif self.numCollisions > 2:
-        #     self.brList.remove(self)
+        elif self.numCollisions == 2:
+            self.fRed = 255
+            self.fGreen = 0
+            self.fBlue = 0
+        elif self.numCollisions > 2:
+            g.br.remove(self)
 
     def display(self):
         self.update()
@@ -121,18 +128,23 @@ class Bricks:
         rect(self.x,self.y,self.w,self.h)
         
 class Game:
-    def __init__(self,w,h):
+    def __init__(self,w,h,bW,bH,numBricks):
         self.w=w
         self.h=h
+        self.bW = bW
+        self.bH = bH
         #self.state = "menu"
         self.p = Paddle(360,700,200,150,5,1)
         self.balls = []
         self.br = []
-        for br in range(2):
-            self.br.append(Bricks(360,500,150,50,5))
+        self.numBricks = numBricks
+        for br in range(1):
+            self.br.append(Bricks(400,500,150,50))
+        while len(self.balls) < 1:
+            self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2),(self.p.yPaddle-(bH/2)),0,0))
+            
         
     def display(self):
-        
         stroke(255)
         fill(255)
         rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
@@ -148,14 +160,13 @@ def setup():
     stroke(255)
     fill(255)
     rect(g.p.xPaddle, g.p.yPaddle,g.p.wPaddle,g.p.hPaddle)
-    #ellipse(b.x,b.y,50,50)
 
-g = Game(720,720)
+
+g = Game(720,720,25,25,4)
 
 def draw():
     background(0)
     g.display()
-   
    
 def keyPressed():
     if keyCode == RIGHT:
@@ -163,10 +174,13 @@ def keyPressed():
     elif keyCode == LEFT:
         g.p.keyHandler[LEFT] = True
     if keyCode == UP:
-        #so that only one ball is released
-        # while len(balls) < 1:
-        g.balls.append(Ball(25,25,g.p.xPaddle+(g.p.wPaddle/2),(g.p.yPaddle-12.5),1,5,False))
-            
+        for balls in g.balls: 
+            if balls.ballReleased == False:
+                for ball in g.balls: 
+                    ball.vx = 1 #how to stop it being so sharp 
+                    print(ball.vx)
+                    ball.vy = 5
+                    ball.ballReleased = True
         
 def keyReleased():
     if keyCode == RIGHT:
