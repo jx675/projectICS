@@ -35,7 +35,7 @@ class Ball:
              self.vx=-self.vx  
              
           #collisions with bricks   
-        if br.x<self.x<br.x+br.w and (self.y == br.y):
+        if br.x<self.x<br.x+br.w and (br.y<self.y<br.y+br.h):
                 if self.x < br.x + br.w/2:
                     self.vx = -8
                 elif self.x >  br.x + br.w/2:
@@ -43,6 +43,16 @@ class Ball:
                 elif self.x == br.x + br.w/2:
                     self.vx = 0
                 self.vy = -self.vy
+        elif br.x<self.x<br.x+br.w and (self.y == br.y):
+            if self.x < br.x + br.w/2:
+                self.vx = -8
+            elif self.x >  br.x + br.w/2:
+                self.vx = 8
+            elif self.x == br.x + br.w/2:
+                self.vx = 0
+            self.vy = -self.vy
+            
+                
             
             
         # elif (self.y + (self.h/2) == br.y + (br.h) and br.x<self.x<br.x+br.w):
