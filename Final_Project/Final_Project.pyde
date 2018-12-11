@@ -1,4 +1,6 @@
-import os, random
+
+import os
+
 path = os.getcwd()+ '/images/'
 
 
@@ -23,9 +25,9 @@ class Ball:
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
         if self.y > g.p.yPaddle and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: #figure out how to make it 'bounce' off surface 
             if self.x < g.p.xPaddle + g.p.wPaddle/2:
-                self.vx = -8
+                self.vx = -10
             elif self.x > g.p.xPaddle + g.p.wPaddle/2:
-                self.vx = 8
+                self.vx = 10
             elif self.x == g.p.xPaddle + g.p.wPaddle/2:
                 self.vx = 0
             self.vy = -self.vy
@@ -47,9 +49,9 @@ class Ball:
         for br in g.br:  
             if br.x<self.x<br.x+br.w and (br.y<self.y<br.y+br.h or self.y == br.y):
                 if self.x < br.x + br.w/2:
-                    self.vx = -8
+                    self.vx = -10
                 elif self.x >  br.x + br.w/2:
-                    self.vx = 8
+                    self.vx = 10
                 elif self.x == br.x + br.w/2:
                     self.vx = 0
                 self.vy = -self.vy
@@ -105,72 +107,130 @@ class Bricks:
         self.x = x
         self.y = y
         self.numCollisions = 0
+        # self.imgunbreak=loadImage(path+"unbreakable.png")
+        # self.imgskull=loadImage(path+"skull.png")
+        # self.imgsmile=loadImage(path+"smile.png")
+        self.imgstar=loadImage(path+"star.png")
+        self.imgbomb=loadImage(path+"bomb.png")
         self.imgs = []
-        for i in range(3):
+        for i in range(4):
             self.imgs.append(loadImage(path+"/"+str(v+i*4)+".png"))
-
+        
 
     def display(self):
         #self.update()
         stroke(255)
-        
+    #    image(self.imgs,self.x,self.y,self.w,self.h)
+    #  I tried to place unbreakbles but it doesnt work
         if self.numCollisions <= 2:
             image(self.imgs[self.numCollisions],self.x,self.y,self.w,self.h)
         elif self.numCollisions > 2:
             g.br.remove(self)
             
-        # if self.numCollisions == 0:
-        #     image(self.imgs,self.x,self.y,self.w,self.h)
-        # elif self.numCollisions == 1:
-        #     image(self.img,self.x,self.y,self.w,self.h)
-        # elif self.numCollisions == 2:
-        #     image(self.img,self.x,self.y,self.w,self.h)
-        # elif self.numCollisions > 2:
-        #     g.br.remove(self)
-       #  fill(self.fRed,self.fGreen,self.fBlue)
-       # rect(self.x,self.y,self.w,self.h)
-      #  image(self.img0,self.x,self.y,self.w,self.h)
-        
+
 class Game:
     def __init__(self,w,h,bW,bH,numBricks):
         self.w=w
         self.h=h
         self.bW = bW
         self.bH = bH
-        #self.state = "menu"
+        self.state = "menu"
         self.p = Paddle(360,690,200,32,8,1)
         self.balls = []
         self.br = []
         self.numBricks = numBricks
-        for br in range(1):
-            self.br.append(Bricks(400,500,150,50,0))
+        self.img=loadImage(path+"background.png")
+        
+    #   image(self.imgs,self.x,self.y,self.w,self.h)
+    #   I tried to place unbreakbles but it doesnt work
+    #   for i in range(2):
+    #   self.br.append(Bricks(800*i,600*i,150,50,13))
+
+        for i in range(2):
+            self.br.append(Bricks(500*i,300*i,150,50,0))
+        
+        for i in range(2):
+            self.br.append(Bricks(200-i*150, 150*i,150,50,1))
+            
+        for i in range(3):
+            self.br.append(Bricks(375+i*100,75*i,150,50,2))
+        
+        for i in range(3):
+            self.br.append(Bricks(550-i*200,150*i,150,50,3))
+            
         while len(self.balls) < 1:
             self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2),self.p.yPaddle-(bH/2),0,0))
             
         
-    def display(self):
-        stroke(255)
-        fill(255)
-        rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
+    def display(self):    
+        image(self.img,0,0,g.w,g.h)
+        #rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
         self.p.display()
         for b in self.balls:
-             b.display() 
+            b.display() 
         for bricks in self.br:
             bricks.display()
         
 def setup():
     size(g.w,g.h)
-    background(0)
-    stroke(255)
-    fill(255)
-    rect(g.p.xPaddle, g.p.yPaddle,g.p.wPaddle,g.p.hPaddle)
+    # stroke(255)
+    # fill(255)
+    # rect(g.p.xPaddle, g.p.yPaddle,g.p.wPaddle,g.p.hPaddle)
 
 g = Game(720,720,25,25,4)
 
 def draw():
-    background(255)
-    g.display()
-   
+    if g.state == "menu":
+        background(0)
+        textSize(50)
+        text("Brick Breaker",g.w//3-50, g.h//3-40)
+       
+        textSize(36)
+        text("Play Game",g.w//2.8, g.h//2.8+40)
+        text("Instructions", g.w//2.8, g.h//2.8+140)  
+        if g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
+            fill(255,0,0)
+            text("Play Game",g.w//2.8, g.h//2.8+40)
+            fill(255)
+
+        elif g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
+            fill(255,0,0)    
+            text("Instructions", g.w//2.8, g.h//2.8+140)    
+            fill(255)
+
+        
+
+    elif g.state == "play":
+        background(255)
+        g.display()
+        #print("game1")
+        
+    elif g.state == "instruction":
+        background(0)
+        textSize(50)
+        text("BrickBreaker Instruction",g.w//5-50, g.h//3-40)
+        textSize(30)
+        text("Use Up key to shoot",g.w//5-100, g.h//3+20)
+        text("Use left and right key to move the paddle",g.w//5-100, g.h//3+60)
+        text("Your goal is to eliminate all possible bricks!",g.w//5-100, g.h//3+100)
+        text("Avoid bombs and Try to catch stars!",g.w//5-100, g.h//3+140)
+        textSize(50)
+        text("Return",g.w//5-100, g.h//3+240)
+        #print("instruction1")
+
+    
+
+def mouseClicked():
+    if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
+        g.state="play"
+        #print("game2")
+    if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
+        g.state="instruction"
+        #print("instruction2")
+    if g.state == "instruction" and g.w//5-150 < mouseX < g.w//5 + 100 and g.h//3+200 < mouseY < g.h//3+280:
+        g.state="menu"
+        print("menu")
+ 
 def keyPressed():
     if keyCode == RIGHT:
         g.p.keyHandler[RIGHT] = True
@@ -180,8 +240,8 @@ def keyPressed():
         for balls in g.balls: 
             if balls.ballReleased == False:
                 for ball in g.balls: 
-                    ball.vx = 0.0000000001 #how to stop it being so sharp 
-                    ball.vy = -5
+                    ball.vx = 0.0001 #how to stop it being so sharp 
+                    ball.vy = -8
                     ball.ballReleased = True
         
 def keyReleased():
