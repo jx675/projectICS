@@ -99,49 +99,34 @@ class Paddle:
         image(self.img,self.xPaddle,self.yPaddle,self.wPaddle,self.hPaddle)
         
 class Bricks:
-    def __init__(self,x,y,w,h):
+    def __init__(self,x,y,w,h,v):
         self.w = w
         self.h = h
         self.x = x
         self.y = y
         self.numCollisions = 0
-        self.img = "" 
-        # self.fRed = 0
-        # self.fGreen = 0
-        # self.fBlue = 0
-        # for r in range(11): 
-        #     self.bricks.append()
-        
-        
-    
-    # def update(self):
-    #     if self.numCollisions == 0:
-    #         self.Red = 0
-    #         self.fGreen = 255
-    #         self.fBlue = 0
-    #     elif self.numCollisions == 1:
-    #         self.fRed = 255
-    #         self.fGreen = 230
-    #         self.fBlue = 0
-    #     elif self.numCollisions == 2:
-    #         self.fRed = 255
-    #         self.fGreen = 0
-    #         self.fBlue = 0
-    #     elif self.numCollisions > 2:
-    #         g.br.remove(self)
+        self.imgs = []
+        for i in range(3):
+            self.imgs.append(loadImage(path+"/"+str(v+i*4)+".png"))
+
 
     def display(self):
         #self.update()
         stroke(255)
         
-        if self.numCollisions == 0:
-            image(self.img,self.x,self.y,self.w,self.h)
-        elif self.numCollisions == 1:
-            image(self.img,self.x,self.y,self.w,self.h)
-        elif self.numCollisions == 2:
-            image(self.img,self.x,self.y,self.w,self.h)
+        if self.numCollisions <= 2:
+            image(self.imgs[self.numCollisions],self.x,self.y,self.w,self.h)
         elif self.numCollisions > 2:
             g.br.remove(self)
+            
+        # if self.numCollisions == 0:
+        #     image(self.imgs,self.x,self.y,self.w,self.h)
+        # elif self.numCollisions == 1:
+        #     image(self.img,self.x,self.y,self.w,self.h)
+        # elif self.numCollisions == 2:
+        #     image(self.img,self.x,self.y,self.w,self.h)
+        # elif self.numCollisions > 2:
+        #     g.br.remove(self)
        #  fill(self.fRed,self.fGreen,self.fBlue)
        # rect(self.x,self.y,self.w,self.h)
       #  image(self.img0,self.x,self.y,self.w,self.h)
@@ -158,13 +143,9 @@ class Game:
         self.br = []
         self.numBricks = numBricks
         for br in range(1):
-            self.br.append(Bricks(400,500,150,50))
-        i = 0
-        for b in self.br:
-            b.img=loadImage(path+str(i%4)+".png")
-            i+=1
+            self.br.append(Bricks(400,500,150,50,0))
         while len(self.balls) < 1:
-            self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2),(self.p.yPaddle-(bH/2)),0,0))
+            self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2),self.p.yPaddle-(bH/2),0,0))
             
         
     def display(self):
@@ -199,9 +180,8 @@ def keyPressed():
         for balls in g.balls: 
             if balls.ballReleased == False:
                 for ball in g.balls: 
-                    ball.vx = 1 #how to stop it being so sharp 
-                    print(ball.vx)
-                    ball.vy = 5
+                    ball.vx = 0.0000000001 #how to stop it being so sharp 
+                    ball.vy = -5
                     ball.ballReleased = True
         
 def keyReleased():
