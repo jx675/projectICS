@@ -1,4 +1,7 @@
-import os
+import os, random
+path = os.getcwd()+ '/images/'
+
+
 class Ball:
     def __init__(self,w,h,x,y,vx,vy):
         self.w = w
@@ -6,6 +9,7 @@ class Ball:
         self.x=x
         self.y=y
         self.vx=vx
+        self.img=loadImage(path+"ball.png")
         self.vy=-vy
         self.ballReleased = False
         self.blnMissed = False
@@ -65,7 +69,7 @@ class Ball:
         self.update()
         stroke(255)
         # Draw a circle at position x,y 25 pixels large
-        ellipse(self.x,self.y,self.w,self.h)
+        image(self.img,self.x,self.y,self.w,self.h)
 
 class Paddle:
     # x_paddle,y_paddle are the cooridinates of the paddle
@@ -77,6 +81,7 @@ class Paddle:
         self.vx_paddle=vx_paddle
         self.dir = dir
         self.keyHandler = {LEFT:False, RIGHT:False}
+        self.img=loadImage(path+"board.png")
         
     def update(self):
         # Update position by adding speed to x and y and ensure that paddle does not go off screen
@@ -85,14 +90,13 @@ class Paddle:
         elif self.keyHandler[LEFT] ==True and self.xPaddle >0 :
             self.xPaddle -= self.vx_paddle
            
-        
     def display(self):
         self.update() 
         # Set fill color to white
         stroke(255)
         fill(255)
         # draw paddle
-        rect(self.xPaddle,self.yPaddle, self.wPaddle,self.hPaddle)
+        image(self.img,self.xPaddle,self.yPaddle,self.wPaddle,self.hPaddle)
         
 class Bricks:
     def __init__(self,x,y,w,h):
@@ -100,32 +104,47 @@ class Bricks:
         self.h = h
         self.x = x
         self.y = y
-        self.numCollisions = 0 
-        self.fRed = 0
-        self.fGreen = 0
-        self.fBlue = 0
+        self.numCollisions = 0
+        self.img = "" 
+        # self.fRed = 0
+        # self.fGreen = 0
+        # self.fBlue = 0
+        # for r in range(11): 
+        #     self.bricks.append()
+        
+        
     
-    def update(self):
-        if self.numCollisions == 0:
-            self.Red = 0
-            self.fGreen = 255
-            self.fBlue = 0
-        elif self.numCollisions == 1:
-            self.fRed = 255
-            self.fGreen = 230
-            self.fBlue = 0
-        elif self.numCollisions == 2:
-            self.fRed = 255
-            self.fGreen = 0
-            self.fBlue = 0
-        elif self.numCollisions > 2:
-            g.br.remove(self)
+    # def update(self):
+    #     if self.numCollisions == 0:
+    #         self.Red = 0
+    #         self.fGreen = 255
+    #         self.fBlue = 0
+    #     elif self.numCollisions == 1:
+    #         self.fRed = 255
+    #         self.fGreen = 230
+    #         self.fBlue = 0
+    #     elif self.numCollisions == 2:
+    #         self.fRed = 255
+    #         self.fGreen = 0
+    #         self.fBlue = 0
+    #     elif self.numCollisions > 2:
+    #         g.br.remove(self)
 
     def display(self):
-        self.update()
+        #self.update()
         stroke(255)
-        fill(self.fRed,self.fGreen,self.fBlue)
-        rect(self.x,self.y,self.w,self.h)
+        
+        if self.numCollisions == 0:
+            image(self.img,self.x,self.y,self.w,self.h)
+        elif self.numCollisions == 1:
+            image(self.img,self.x,self.y,self.w,self.h)
+        elif self.numCollisions == 2:
+            image(self.img,self.x,self.y,self.w,self.h)
+        elif self.numCollisions > 2:
+            g.br.remove(self)
+       #  fill(self.fRed,self.fGreen,self.fBlue)
+       # rect(self.x,self.y,self.w,self.h)
+      #  image(self.img0,self.x,self.y,self.w,self.h)
         
 class Game:
     def __init__(self,w,h,bW,bH,numBricks):
@@ -134,12 +153,16 @@ class Game:
         self.bW = bW
         self.bH = bH
         #self.state = "menu"
-        self.p = Paddle(360,700,200,150,5,1)
+        self.p = Paddle(360,690,200,32,8,1)
         self.balls = []
         self.br = []
         self.numBricks = numBricks
         for br in range(1):
             self.br.append(Bricks(400,500,150,50))
+        i = 0
+        for b in self.br:
+            b.img=loadImage(path+str(i%4)+".png")
+            i+=1
         while len(self.balls) < 1:
             self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2),(self.p.yPaddle-(bH/2)),0,0))
             
@@ -161,11 +184,10 @@ def setup():
     fill(255)
     rect(g.p.xPaddle, g.p.yPaddle,g.p.wPaddle,g.p.hPaddle)
 
-
 g = Game(720,720,25,25,4)
 
 def draw():
-    background(0)
+    background(255)
     g.display()
    
 def keyPressed():
