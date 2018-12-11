@@ -69,13 +69,12 @@ class Ball:
 
 class Paddle:
     # x_paddle,y_paddle are the cooridinates of the paddle
-    def __init__(self,xPaddle,yPaddle,wPaddle,hPaddle,vx_paddle,dir):
+    def __init__(self,xPaddle,yPaddle,wPaddle,hPaddle,vx_paddle):
         self.xPaddle=xPaddle
         self.yPaddle=yPaddle
         self.wPaddle = wPaddle
         self.hPaddle = hPaddle
         self.vx_paddle=vx_paddle
-        self.dir = dir
         self.keyHandler = {LEFT:False, RIGHT:False}
         
     def update(self):
@@ -134,7 +133,7 @@ class Game:
         self.bW = bW
         self.bH = bH
         #self.state = "menu"
-        self.p = Paddle(360,700,200,150,5,1)
+        self.p = Paddle(360,700,200,150,5)
         self.balls = []
         self.br = []
         self.numBricks = numBricks
@@ -178,7 +177,6 @@ def keyPressed():
             if balls.ballReleased == False:
                 for ball in g.balls: 
                     ball.vx = 1 #how to stop it being so sharp 
-                    print(ball.vx)
                     ball.vy = 5
                     ball.ballReleased = True
         
