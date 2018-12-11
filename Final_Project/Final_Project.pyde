@@ -170,9 +170,11 @@ class Game:
             b.display() 
         for bricks in self.br:
             bricks.display()
-        
+img=loadImage(path+"background.png")  
 def setup():
     size(g.w,g.h)
+    
+  
     # stroke(255)
     # fill(255)
     # rect(g.p.xPaddle, g.p.yPaddle,g.p.wPaddle,g.p.hPaddle)
@@ -180,8 +182,10 @@ def setup():
 g = Game(720,720,25,25,4)
 
 def draw():
+    global img
     if g.state == "menu":
-        background(0)
+       # background(0)
+        image(img,0,0,g.w,g.h)
         textSize(50)
         text("Brick Breaker",g.w//3-50, g.h//3-40)
        
@@ -198,7 +202,6 @@ def draw():
             text("Instructions", g.w//2.8, g.h//2.8+140)    
             fill(255)
 
-        
 
     elif g.state == "play":
         background(255)
@@ -206,7 +209,8 @@ def draw():
         #print("game1")
         
     elif g.state == "instruction":
-        background(0)
+        #background(0)
+        image(img,0,0,g.w,g.h)
         textSize(50)
         text("BrickBreaker Instruction",g.w//5-50, g.h//3-40)
         textSize(30)
