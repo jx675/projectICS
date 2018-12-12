@@ -1,6 +1,9 @@
 import os,random
+add_library('minim')
 path = os.getcwd()+ '/images/'
-class Ball:
+player = Minim(this)
+
+class Ball():
     def __init__(self,w,h,x,y,vx,vy):
         self.w = w
         self.h = h
@@ -11,15 +14,17 @@ class Ball:
         self.vy=-vy
         self.ballReleased = False
         self.blnMissed = False
+        self.collide = player.loadFile(path+"/sounds/collide.mp3")
+        
+
         
     def update(self):
-        
         #make sure the ball doesn't go outrange// <0 b/c top left is 0,0
         if self.y - (self.h/2) <0:  
              self.vy=-self.vy
     
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
-        if self.y  > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: #figure out how to make it 'bounce' off surface 
+        if self.y > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: #figure out how to make it 'bounce' off surface 
             if self.x < g.p.xPaddle + g.p.wPaddle/2:
                 self.vx = -15
             elif self.x > g.p.xPaddle + g.p.wPaddle/2:
@@ -36,6 +41,7 @@ class Ball:
             self.y=g.p.yPaddle-(self.h/2)-10
             self.vy = 0
             self.vx = 0
+           
     
         #make sure ball stays inside width of box
         if self.x + (self.w/2) > width or self.x - (self.w/2) <0:
@@ -51,7 +57,11 @@ class Ball:
                 elif self.x == br.x + br.w/2:
                     self.vx = 0
                 self.vy = -self.vy
-                br.numCollisions += 1 
+                br.numCollisions += 1
+                self.collide.rewind()
+                self.collide.play()  
+              #  if self.v<4 or self.v ==5:
+              #      self.grade += 10
         
         #keep the ball on the platform
         if self.ballReleased == False and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle and self.y==g.p.yPaddle-(g.bH/2)-10 and (g.p.keyHandler[RIGHT] == True or g.p.keyHandler[LEFT] == True):
@@ -62,13 +72,15 @@ class Ball:
         self.x += self.vx
         self.y += self.vy
         
-# Called every re-draw, default 30 times per second
+    # Called every re-draw, default 30 times per second
     def display(self):
         self.update()
         stroke(255)
-        # Draw a circle at position x,y 25 pixels large
+        # draw the ball
         image(self.img,self.x,self.y,self.w,self.h)
-
+        #textSize(38)
+        #text(str(self.grade),10,10)
+ 
 class Paddle:
     # x_paddle,y_paddle are the cooridinates of the paddle
     def __init__(self,xPaddle,yPaddle,wPaddle,hPaddle,vx_paddle):
@@ -103,9 +115,12 @@ class Bricks:
         self.y = y
         self.v = v
         self.numCollisions = 0
+        self.grade=0
         self.imgs = []
         self.unlocked = False
         self.bonus = [] 
+        
+        
         if self.v < 4:
             for i in range(4):
                 self.imgs.append(loadImage(path+"/"+str(v+i*4)+".png"))
@@ -121,6 +136,7 @@ class Bricks:
                 image(self.imgs[self.numCollisions],self.x,self.y,self.w,self.h)
             elif self.numCollisions > 2:
                 g.br.remove(self)
+                self.grade+=10
         elif self.v == 4:
             image(self.imgs[0],self.x,self.y,self.w,self.h)
         elif self.v == 5:
@@ -129,6 +145,10 @@ class Bricks:
             elif self.numCollisions > 0:
                 index = g.br.index(self)
                 g.br[index].unlocked = True
+                g.br.remove(self)
+                self.grade+=10
+                #can't just remove this, stars will not show up
+                #even without this line, stars also don't show up some times 
                         
 class Star:
     def __init__(self,x,y,w,h,vy):
@@ -141,14 +161,13 @@ class Star:
         
     def update(self):
         self.y += self.vy
-        if self.y > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
+        if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
             for bricks in g.br:
                 if bricks.unlocked == True:
                     bricks.bonus = ""
     def display(self):
         self.update()
         image(self.img,self.x,self.y,self.w,self.h)
-        
 
         
 class Game:
@@ -163,6 +182,8 @@ class Game:
         self.br = []
         self.numBricks = numBricks
         self.img=loadImage(path+"background.png")
+        self.music = player.loadFile(path+"/sounds/music.mp3")
+        self.music.loop()
             
         for i in range(2):
             self.br.append(Bricks(500*i,300*i,150,50,0))
@@ -191,11 +212,18 @@ class Game:
             numRandBonus += 1
         while len(self.balls) < 1:
             self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(bH/2)-10,0,0))
-            
+        
+        
+        
     def display(self):    
         image(self.img,0,0,g.w,g.h)
         #rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
         self.p.display()
+        textSize(30)
+        text("Highest Score:",20,600)
+        text("Score:",20,640)
+        
+        #text(str(self.Bricks.grade),70,620)
         for b in self.balls:
             b.display() 
         for bricks in self.br:
@@ -205,7 +233,8 @@ class Game:
                 for bonus in bricks.bonus:
                     bonus.display()
         
-img=loadImage(path+"background.png")  
+img1=loadImage(path+"backgroundIn.png")
+img=loadImage(path+"background.png")   
 def setup():
     size(g.w,g.h)
 
@@ -235,23 +264,20 @@ def draw():
         #print("game1")
     elif g.state == "instruction":
         #background(0)
-        image(img,0,0,g.w,g.h)
-        textSize(50)
-        text("BrickBreaker Instruction",g.w//5-50, g.h//3-40)
-        textSize(30)
-        text("1)Use Up key to shoot",g.w//5-100, g.h//3+20)
-        text("2)Use left and right key to move the paddle",g.w//5-100, g.h//3+60)
-        text("3)Your goal is to eliminate all possible bricks!",g.w//5-100, g.h//3+100)
-        text("4)Avoid bombs and try to catch stars!",g.w//5-100, g.h//3+140)
-        textSize(50)
-        text("Return",g.w//5-100, g.h//3+240)
+        image(img1,0,0,g.w,g.h)
+        text("Return",g.w//2.5, g.h//3+400)
+        if  g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
+            fill(255,0,0) 
+            textSize(40)
+            text("Return",g.w//2.5, g.h//3+400)
+            fill(255)
         
 def mouseClicked():
     if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
         g.state="play"
     if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
         g.state="instruction"
-    if g.state == "instruction" and g.w//5-150 < mouseX < g.w//5 + 100 and g.h//3+200 < mouseY < g.h//3+280:
+    if g.state == "instruction" and g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
         g.state="menu"
         print("menu")
  
