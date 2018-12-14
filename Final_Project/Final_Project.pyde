@@ -16,15 +16,13 @@ class Ball():
         self.blnMissed = False
         self.collide = player.loadFile(path+"/sounds/collide.mp3")
         
-
-        
     def update(self):
         #make sure the ball doesn't go outrange// <0 b/c top left is 0,0
         if self.y - (self.h/2) <0:  
              self.vy=-self.vy
     
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
-        if self.y > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: #figure out how to make it 'bounce' off surface 
+        if self.y > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: 
             if self.x < g.p.xPaddle + g.p.wPaddle/2:
                 self.vx = -15
             elif self.x > g.p.xPaddle + g.p.wPaddle/2:
@@ -49,7 +47,7 @@ class Ball():
              
         #collisions with bricks
         for br in g.br:  
-            if br.x<self.x<br.x+br.w and (br.y<self.y<br.y+br.h or self.y == br.y):
+            if br.x<self.x<br.x+br.w and (br.y<self.y<br.y+br.h or self.y == br.y) and (br.unlocked == False):
                 if self.x < br.x + br.w/2:
                     self.vx = -10
                 elif self.x >  br.x + br.w/2:
@@ -118,7 +116,7 @@ class Bricks:
         self.grade=0
         self.imgs = []
         self.unlocked = False
-        self.bonus = [] 
+        self.bonus = "" 
         
         
         if self.v < 4:
@@ -145,7 +143,9 @@ class Bricks:
             elif self.numCollisions > 0:
                 index = g.br.index(self)
                 g.br[index].unlocked = True
-                g.br.remove(self)
+                if  g.br[index].bonus.y > g.p.yPaddle - (self.h/2)-10:
+                    g.br.remove(self)
+                    
                 self.grade+=10
                 #can't just remove this, stars will not show up
                 #even without this line, stars also don't show up some times 
@@ -164,10 +164,12 @@ class Star:
         if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
             for bricks in g.br:
                 if bricks.unlocked == True:
-                    bricks.bonus = ""
+                    bricks.bonus.img = None
     def display(self):
         self.update()
-        image(self.img,self.x,self.y,self.w,self.h)
+        for bricks in g.br:
+            if bricks.unlocked == True and bricks.bonus.img != None:
+                image(self.img,self.x,self.y,self.w,self.h)
 
         
 class Game:
@@ -202,16 +204,18 @@ class Game:
         self.br[8].v = 4
         self.br[8].imgs[0] = loadImage(path+"/13.png")     
                            
-        randBonus = 8
+        randBonus = random.randint(0,len(self.br)-1)
         numRandBonus = 0
-        while numRandBonus != 2:
-            while randBonus == 8:
+        while numRandBonus < 2:
+            
+            while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
                 randBonus = random.randint(0,len(self.br)-1)
+                
             self.br[randBonus].v = 5
             self.br[randBonus].imgs[0] = loadImage(path+"/14.png")
-            self.br[randBonus].bonus.append(Star(self.br[randBonus].x+self.br[randBonus].x/2,self.br[randBonus].y+self.br[randBonus].h,30,30,15))
-            randBonus = 8
+            self.br[randBonus].bonus = Star(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,30,30,15)
             numRandBonus += 1
+            
         while len(self.balls) < 1:
             self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(bH/2)-10,0,0))
         
@@ -232,8 +236,7 @@ class Game:
             bricks.display()
         for bricks in self.br:
             if bricks.unlocked == True:
-                for bonus in bricks.bonus:
-                    bonus.display()
+                bricks.bonus.display()
         
 img1=loadImage(path+"backgroundIn.png")
 img=loadImage(path+"background.png") 
