@@ -63,14 +63,14 @@ class Ball():
                 self.collide.play() 
                 if br.v != 4:
                     g.score += 10
-                if g.bonusState == "bomb" or g.bonusState == "star" :
+                if g.p.wPaddle == 300:
                     self.bonusCollisions += 1
-                    if self.bonusCollisions > 50: 
+                    if self.bonusCollisions > 3: 
                         g.p.wPaddle = 200
                         g.p.img=loadImage(path+"board.png")
                         self.bonusCollisions = 0
         
-            
+                
         #keep the ball on the platform
         if self.ballReleased == False and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle and self.y==g.p.yPaddle-(g.bH/2)-10 and (g.p.keyHandler[RIGHT] == True or g.p.keyHandler[LEFT] == True):
             self.x = g.p.xPaddle + g.p.wPaddle/2 -15
@@ -163,6 +163,8 @@ class Bonus:
         self.h = h
         self.vy = vy
         
+        
+        
     def update(self):
         self.y += self.vy
    
@@ -175,36 +177,22 @@ class Star(Bonus):
     def __init__(self,x,y,w,h,vy):
         Bonus.__init__(self,x,y,w,h,vy)
         self.img = loadImage(path+"/star.png")
-        
+
+      
     def update(self): 
         self.y += self.vy 
         if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
-            if g.bonusState == "star":
-                g.balls.append(Ball(g.bW,g.bH,g.balls[0].x,g.balls[0].x,-g.balls[0].vx,g.balls[0].vy))
-            else:
-                g.bonusState = "star"
-                g.score += 50
-                g.p.wPaddle = 300
-                g.p.img=loadImage(path+"huge_board.png")
-                        
+            g.score += 50
+            g.p.wPaddle = 300
+            g.p.img=loadImage(path+"huge_board.png")
+                    
         
 class Bomb(Bonus):
     def __init__(self,x,y,w,h,vy):
         Bonus.__init__(self,x,y,w,h,vy)
         self.img = loadImage(path+"/bomb.png")
-    
-    def update(self): 
-        self.y += self.vy 
-        if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
-            if g.bonusState == 'bomb':
-                exit() #make lose condition
-            else:
-                g.bonusState = "bomb"
-                g.score -= 50
-                g.p.wPaddle = 150
-                g.p.img=loadImage(path+"small_board.png")
-    
-            
+
+        
 class Game:
     def __init__(self,w,h,bW,bH,numBricks):
         self.w=w
@@ -222,7 +210,6 @@ class Game:
         self.pause=False
         self.pauseSound = player.loadFile(path+"/sounds/pause.mp3")
         self.score = 0
-        self.bonusState = ""
             
         for i in range(2):
             self.br.append(Bricks(500*i,300*i,150,50,0))
@@ -285,9 +272,7 @@ class Game:
             if bricks.unlocked == True:
                 bricks.bonus.display()
         
-        
-imgin1=loadImage(path+"Instruction1.png")
-imgin2=loadImage(path+"Instruction2.png")
+img1=loadImage(path+"backgroundIn.png")
 img=loadImage(path+"background.png") 
 img2=loadImage(path+"pause.png")  
 def setup():
@@ -296,9 +281,8 @@ def setup():
 g = Game(720,720,25,25,4)
 
 def draw():
-    global img, img2, imgin1, imgin2
+    global img
     if g.state == "menu":
-       # background(0)
         image(img,0,0,g.w,g.h)
         textSize(50)
         text("Brick Breaker",g.w//3-50, g.h//3-40)
@@ -313,79 +297,45 @@ def draw():
             fill(255,0,0)    
             text("Instructions", g.w//2.8, g.h//2.8+140)    
             fill(255)
-    
-    elif g.state == "instruction2":
-        image(imgin2,0,0,g.w,g.h)
-        text("Menu",g.w//4, g.h//3+400)
-        text("Previous Page",g.w-300, g.h//3+400)
-        
-        if  g.w//4-50 < mouseX < g.w//4+100 and g.h//3+350 < mouseY < g.h//3+450:
-            fill(255,0,0) 
-            textSize(40)
-            text("Menu",g.w//4, g.h//3+400)
-            fill(255)
-            
-        if  g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
-            fill(255,0,0) 
-            textSize(40)
-            text("Previous Page",g.w-300, g.h//3+400)
-            fill(255)    
+    elif g.state == "play":
+        background(255)
+        g.display()
+        #print("game1")
     elif g.state == "instruction":
         #background(0)
-        image(imgin1,0,0,g.w,g.h)
-        text("Next Page",g.w-300, g.h//3+400)
-        text("Menu",g.w//4, g.h//3+400)
-        if  g.w//4-50 < mouseX < g.w//4+100 and g.h//3+350 < mouseY < g.h//3+450:
+        image(img1,0,0,g.w,g.h)
+        text("Return",g.w//2.5, g.h//3+400)
+        if  g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
             fill(255,0,0) 
             textSize(40)
-            text("Menu",g.w//4, g.h//3+400)
+            text("Return",g.w//2.5, g.h//3+400)
             fill(255)
-           # text("Next Page",g.w-300, g.h//3+400)
-        if  g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
-            fill(255,0,0) 
-            textSize(40)
-            text("Next Page",g.w-300, g.h//3+400)
-            fill(255)
-                    
     elif g.state == "play":
-        if g.pause == False:
-       
+        if not g.pause:
             background(255)
             g.display()
         else:
-      
-            fill(255,0,0)
-            image(img2,300,300,182,137)
-        
+            print("d")
+            image(img2,0,0,g.w,g.h)
+            fill(0)
+            textSize(50)
+            text("Paused",300,360)
             
-        
 def mouseClicked():
-    #Page Menu
     if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
         g.state="play"
-    elif g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
+    if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
         g.state="instruction"
-     
-    #Page Instruction
-    elif g.state == "instruction" and g.w//4-50 < mouseX < g.w//4+100 and g.h//3+350 < mouseY < g.h//3+450:
+    if g.state == "instruction" and g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
         g.state="menu"
-    elif g.state == "instruction" and g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
-        g.state="instruction2"
-      #  print("LLL")
-     
-    #Page Instruction2   
-    elif g.state == "instruction2" and g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
-        g.state="instruction"
-    elif g.state == "instruction2" and g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
-        g.state="menu"
-   
+        print("menu")
  
 def keyPressed():
     if keyCode == RIGHT:
         g.p.keyHandler[RIGHT] = True
     elif keyCode == LEFT:
         g.p.keyHandler[LEFT] = True
-    elif keyCode == UP:
+    if keyCode == UP:
         for balls in g.balls: 
             if balls.ballReleased == False:
                 for ball in g.balls: 
@@ -393,16 +343,14 @@ def keyPressed():
                     ball.vy = -15
                     ball.ballReleased = True
     elif keyCode == 80:
-        print("aaa")
         g.pauseSound.rewind()
         g.pauseSound.play()
-        
+     
         if g.pause:
             g.music.play()
-            #print("f")
+            print("f")
         else:
             g.music.pause()
-            print("aab")
         
         g.pause = not g.pause
 
