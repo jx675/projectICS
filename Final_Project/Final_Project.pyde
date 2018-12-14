@@ -184,6 +184,8 @@ class Game:
         self.img=loadImage(path+"background.png")
         self.music = player.loadFile(path+"/sounds/music.mp3")
         self.music.loop()
+        self.pause=False
+        self.pauseSound = player.loadFile(path+"/sounds/pause.mp3")
             
         for i in range(2):
             self.br.append(Bricks(500*i,300*i,150,50,0))
@@ -234,7 +236,8 @@ class Game:
                     bonus.display()
         
 img1=loadImage(path+"backgroundIn.png")
-img=loadImage(path+"background.png")   
+img=loadImage(path+"background.png") 
+img2=loadImage(path+"pause.png")  
 def setup():
     size(g.w,g.h)
 
@@ -271,6 +274,17 @@ def draw():
             textSize(40)
             text("Return",g.w//2.5, g.h//3+400)
             fill(255)
+    elif g.state == "play":
+        if not g.pause:
+            background(255)
+            g.display()
+        else:
+            print("d")
+            image(img2,0,0,g.w,g.h)
+            fill(0)
+            textSize(50)
+            text("Paused",300,360)
+            
         
 def mouseClicked():
     if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
@@ -293,6 +307,17 @@ def keyPressed():
                     ball.vx = 0.0001 
                     ball.vy = -15
                     ball.ballReleased = True
+    elif keyCode == 80:
+        g.pauseSound.rewind()
+        g.pauseSound.play()
+     
+        if g.pause:
+            g.music.play()
+            print("f")
+        else:
+            g.music.pause()
+        
+        g.pause = not g.pause
 
 def keyReleased():
     if keyCode == RIGHT:
