@@ -1,4 +1,4 @@
-import os,random
+import os,random, time
 add_library('minim')
 path = os.getcwd()+ '/images/'
 player = Minim(this)
@@ -15,6 +15,7 @@ class Ball():
         self.ballReleased = False
         self.blnMissed = False
         self.collide = player.loadFile(path+"/sounds/collide.mp3")
+        self.bonusCollisions = 0
         
     def update(self):
         #make sure the ball doesn't go outrange// <0 b/c top left is 0,0
@@ -55,11 +56,20 @@ class Ball():
                 elif self.x == br.x + br.w/2:
                     self.vx = 0
                 self.vy = -self.vy
+                
                 br.numCollisions += 1
+                
                 self.collide.rewind()
                 self.collide.play() 
                 if br.v != 4:
                     g.score += 10
+                if g.p.wPaddle == 300:
+                    self.bonusCollisions += 1
+                    if self.bonusCollisions > 3: 
+                        g.p.wPaddle = 200
+                        g.p.img=loadImage(path+"board.png")
+                        self.bonusCollisions = 0
+        
                 
         
         #keep the ball on the platform
@@ -143,7 +153,7 @@ class Bricks:
             elif self.numCollisions > 0:
                 index = g.br.index(self)
                 g.br[index].unlocked = True
-                if  g.br[index].bonus.y > g.p.yPaddle - (self.h/2)-10:
+                if  g.br[index].bonus.y > g.p.yPaddle - (self.h/2):
                     g.br.remove(self)
                     
 class Bonus:
@@ -154,20 +164,29 @@ class Bonus:
         self.h = h
         self.vy = vy
         
+        
+        
     def update(self):
         self.y += self.vy
    
     def display(self):
         self.update()
         for bricks in g.br:
-            if bricks.unlocked == True : #and bricks.bonus.img != None
                 image(self.img,self.x,self.y,self.w,self.h)
                 
 class Star(Bonus):
     def __init__(self,x,y,w,h,vy):
         Bonus.__init__(self,x,y,w,h,vy)
         self.img = loadImage(path+"/star.png")
-                        
+
+      
+    def update(self): 
+        self.y += self.vy 
+        if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
+            g.score += 50
+            g.p.wPaddle = 300
+            g.p.img=loadImage(path+"huge_board.png")
+                    
         
 class Bomb(Bonus):
     def __init__(self,x,y,w,h,vy):
