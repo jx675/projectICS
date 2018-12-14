@@ -209,7 +209,7 @@ class Bomb(Bonus):
         self.y += self.vy 
         if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
             if g.bonusState == 'bomb':
-                exit() #make lose condition
+                g.lose = True
             else:
                 g.bonusState = "bomb"
                 g.score -= 50
