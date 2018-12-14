@@ -34,14 +34,24 @@ class Ball():
             
         #what to do if ball goes below paddle
         if self.y + (self.h/2) > height:
-            self.blnMissed = True #deal with this condition
+            #self.blnMissed = True
+            if len(g.balls) == 1:
+                g.lives -= 1
+            elif len(g.balls) > 1:
+                del g.balls[1]
+                
+            if g.lives == 0:
+                g.lose = True
+            
+            
+                
             self.ballReleased = False
             self.x=g.p.xPaddle+(g.p.wPaddle/2-15)
             self.y=g.p.yPaddle-(self.h/2)-10
             self.vy = 0
             self.vx = 0
+            #self.blnMissed = False
            
-    
         #make sure ball stays inside width of box
         if self.x + (self.w/2) > width or self.x - (self.w/2) <0:
              self.vx=-self.vx  
@@ -58,17 +68,19 @@ class Ball():
                 self.vy = -self.vy
                 
                 br.numCollisions += 1
-                
+    
                 self.collide.rewind()
                 self.collide.play() 
                 if br.v != 4:
                     g.score += 10
                 if g.bonusState == "bomb" or g.bonusState == "star" :
                     self.bonusCollisions += 1
-                    if self.bonusCollisions > 50: 
+                    if self.bonusCollisions > 8:
                         g.p.wPaddle = 200
                         g.p.img=loadImage(path+"board.png")
                         self.bonusCollisions = 0
+                        if len(g.balls) > 1:
+                            del g.balls[1]
         
             
         #keep the ball on the platform
@@ -132,8 +144,6 @@ class Bricks:
                 self.imgs.append(loadImage(path+"/"+str(v+i*4)+".png"))
         elif self.v == 4:
             self.imgs.append(loadImage(path+"/13.png"))
-        # elif self.v == 5:
-        #     self.imgs.append(loadImage(path+"/14.png"))
         
     def display(self):
         stroke(255)
@@ -143,6 +153,7 @@ class Bricks:
             elif self.numCollisions > 2:
                 g.score += 50
                 g.br.remove(self)
+                g.numBricks += 1
     
         elif self.v == 4:
             image(self.imgs[0],self.x,self.y,self.w,self.h)
@@ -154,6 +165,7 @@ class Bricks:
                 g.br[index].unlocked = True
                 if  g.br[index].bonus.y > g.p.yPaddle - (self.h/2):
                     g.br.remove(self)
+                    g.numBricks += 1
                     
 class Bonus:
     def __init__(self,x,y,w,h,vy):
@@ -162,7 +174,7 @@ class Bonus:
         self.w = w
         self.h = h
         self.vy = vy
-        
+    
     def update(self):
         self.y += self.vy
    
@@ -206,7 +218,7 @@ class Bomb(Bonus):
     
             
 class Game:
-    def __init__(self,w,h,bW,bH,numBricks):
+    def __init__(self,w,h,bW,bH):
         self.w=w
         self.h=h
         self.bW = bW
@@ -215,7 +227,7 @@ class Game:
         self.p = Paddle(360,684,200,36,10)
         self.balls = []
         self.br = []
-        self.numBricks = numBricks
+        self.numBricks = 0
         self.img=loadImage(path+"background.png")
         self.music = player.loadFile(path+"/sounds/music.mp3")
         self.music.loop()
@@ -223,19 +235,22 @@ class Game:
         self.pauseSound = player.loadFile(path+"/sounds/pause.mp3")
         self.score = 0
         self.bonusState = ""
-            
+        self.imgLives = loadImage(path+"/lives.png")
+        self.lives = 3
+        self.win = False
+        self.lose = False
+        
+        #creating the bricks on the screen 
         for i in range(2):
             self.br.append(Bricks(500*i,300*i,150,50,0))
-        
         for i in range(2):
             self.br.append(Bricks(200-i*150, 150*i,150,50,1))
-            
         for i in range(3):
             self.br.append(Bricks(375+i*100,75*i,150,50,2))
-        
         for i in range(3):
             self.br.append(Bricks(550-i*200,150*i,150,50,3))
-            
+        
+        #creating the unbreakable brick
         self.br[8].v = 4
         self.br[8].imgs[0] = loadImage(path+"/13.png")     
         
@@ -256,15 +271,17 @@ class Game:
         randBonus = random.randint(0,len(self.br)-1)
         numRandBonus = 0
         while numRandBonus < 2:
-            
+            #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
             while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
                 randBonus = random.randint(0,len(self.br)-1)
-                
+            
             self.br[randBonus].v = 5
             self.br[randBonus].imgs[0] = loadImage(path+"/15.png")
             self.br[randBonus].bonus = Bomb(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,40,40,15)
             numRandBonus += 1
-            
+        
+        
+        #intialising a list with one ball at the beginning of the game
         while len(self.balls) < 1:
             self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(bH/2)-10,0,0))
         
@@ -273,18 +290,22 @@ class Game:
         #rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
         self.p.display()
         textSize(30)
-        #text("Highest Score:",20,600)
         text("Score: " + str(g.score),20,640)
         
-        #text(str(self.Bricks.grade),70,620)
         for b in self.balls:
             b.display() 
+            
         for bricks in self.br:
             bricks.display()
+            
+        #displaying the bonus falling 
         for bricks in self.br:
             if bricks.unlocked == True:
                 bricks.bonus.display()
         
+        for i in range(self.lives):
+            image(self.imgLives,20+i*60,550,50,50)
+            
         
 imgin1=loadImage(path+"Instruction1.png")
 imgin2=loadImage(path+"Instruction2.png")
@@ -293,7 +314,7 @@ img2=loadImage(path+"pause.png")
 def setup():
     size(g.w,g.h)
 
-g = Game(720,720,25,25,4)
+g = Game(720,720,25,25)
 
 def draw():
     global img, img2, imgin1, imgin2
@@ -356,6 +377,21 @@ def draw():
       
             fill(255,0,0)
             image(img2,300,300,182,137)
+            
+    if g.numBricks == 9:
+        g.win = True
+            
+    if g.lose == True:
+        image(loadImage(path+"/gameover.png"),720/4,720/4)
+        for ball in g.balls:
+            ball.ballReleased = True
+            ball.vy = 0
+            ball.vx = 0
+        g.p.vx_paddle = 0
+    elif g.win == True:
+        image(loadImage(path+"/win.gif"),720/4,720/4)
+        #exit() #exit the game when it is won
+    
         
             
         
