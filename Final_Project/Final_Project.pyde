@@ -43,7 +43,6 @@ class Ball():
             if g.lives == 0:
                 g.lose = True
             
-            
                 
             self.ballReleased = False
             self.x=g.p.xPaddle+(g.p.wPaddle/2-15)
@@ -209,7 +208,7 @@ class Bomb(Bonus):
         self.y += self.vy 
         if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
             if g.bonusState == 'bomb':
-                g.lose = True
+                exit() #make lose condition
             else:
                 g.bonusState = "bomb"
                 g.score -= 50
@@ -390,6 +389,14 @@ def draw():
             
     if g.lose == True:
         image(loadImage(path+"/gameover.png"),720/4,720/4)
+        textSize(40)
+        text("Retry",g.w/2.3, g.h-100)
+        if  g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+            fill(255,0,0) 
+            textSize(40)
+            text("Retry",g.w/2.3, g.h-100)
+            fill(255)
+        
         for ball in g.balls:
             ball.ballReleased = True
             ball.vy = 0
@@ -398,15 +405,18 @@ def draw():
         
     elif g.win == True:
         image(loadImage(path+"/win.gif"),720/4,720/4)
+        textSize(40)
+        text("Retry",g.w/2.3, g.h-100)
+        if  g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+            fill(255,0,0) 
+            textSize(40)
+            text("Retry",g.w/2.3, g.h-100)
+            fill(255)
         for ball in g.balls:
             ball.ballReleased = True
             ball.vy = 0
             ball.vx = 0
         g.p.vx_paddle = 0
-        
-    
-        
-            
         
 def mouseClicked():
     #Page Menu
@@ -427,7 +437,16 @@ def mouseClicked():
         g.state="instruction"
     elif g.state == "instruction2" and g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
         g.state="menu"
-   
+        
+    elif g.state == "play" and g.lose == True and g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+        print("lose")
+        g.__init__(720,720,25,25)
+       
+    elif g.state == "play" and g.win == True and g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+        print("win")
+        g.__init__(720,720,25,25)
+       # g.state="menu"
+       
  
 def keyPressed():
     if keyCode == RIGHT:
@@ -448,10 +467,9 @@ def keyPressed():
         
         if g.pause:
             g.music.play()
-            #print("f")
+     
         else:
             g.music.pause()
-            #print("aab")
         
         g.pause = not g.pause
 
