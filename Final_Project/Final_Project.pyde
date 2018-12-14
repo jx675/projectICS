@@ -458,10 +458,8 @@ def draw():
         game[level-1].win = True
         if level == 1:
             level += 1
-
         return
         
-            
     if game[level-1].lose == True:
         image(loadImage(path+"/gameover.png"),720/4,720/4)
         textSize(40)
