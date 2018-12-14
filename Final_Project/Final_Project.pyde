@@ -240,8 +240,7 @@ class Game:
         self.lives = 3
         self.win = False
         self.lose = False
-        
-        
+
         #creating the bricks on the screen 
         for i in range(2):
             self.br.append(Bricks(500*i,300*i,150,50,0))
@@ -311,6 +310,25 @@ class Game:
         
         for i in range(self.lives):
             image(self.imgLives,20+i*60,550,50,50)
+
+class lvl1(Game):
+    def __init__(self,w,h,bW,bH):
+        Game.__init__(self,w,h,bW,bH,)
+        
+        for i in range(3):
+            self.br.append(Bricks(500*i,300*i,150,50,0))
+            self.numBricks += 1
+        for i in range(3):
+            self.br.append(Bricks(200-i*150, 150*i,150,50,1))
+            self.numBricks += 1
+        for i in range(3):
+            self.br.append(Bricks(375+i*100,75*i,150,50,2))
+            self.numBricks += 1
+        for i in range(3):
+            self.br.append(Bricks(550-i*200,150*i,150,50,3))
+            self.numBricks += 1
+        
+    
             
         
 imgin1=loadImage(path+"Instruction1.png")
