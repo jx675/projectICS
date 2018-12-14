@@ -2,7 +2,7 @@ import os,random, time
 add_library('minim')
 path = os.getcwd()+ '/images/'
 player = Minim(this)
-
+state = "lvl1"
 class Ball():
     def __init__(self,w,h,x,y,vx,vy):
         self.w = w
@@ -13,7 +13,6 @@ class Ball():
         self.img=loadImage(path+"ball.png")
         self.vy=-vy
         self.ballReleased = False
-        self.blnMissed = False
         self.collide = player.loadFile(path+"/sounds/collide.mp3")
         self.bonusCollisions = 0
         
@@ -34,22 +33,22 @@ class Ball():
             
         #what to do if ball goes below paddle
         if self.y + (self.h/2) > height:
-            #self.blnMissed = True
+
             if len(g.balls) == 1:
                 g.lives -= 1
+            #if the user misses a ball with the bonus ball in play, the don't lose a life but the bonus ball disappears
             elif len(g.balls) > 1:
                 del g.balls[1]
-                
             if g.lives == 0:
                 g.lose = True
             
-                
             self.ballReleased = False
             self.x=g.p.xPaddle+(g.p.wPaddle/2-15)
             self.y=g.p.yPaddle-(self.h/2)-10
             self.vy = 0
             self.vx = 0
-            #self.blnMissed = False
+            
+        
            
         #make sure ball stays inside width of box
         if self.x + (self.w/2) > width or self.x - (self.w/2) <0:
@@ -78,8 +77,7 @@ class Ball():
                         g.p.wPaddle = 200
                         g.p.img=loadImage(path+"board.png")
                         self.bonusCollisions = 0
-                        if len(g.balls) > 1:
-                            del g.balls[1]
+                        
         
             
         #keep the ball on the platform
@@ -196,6 +194,9 @@ class Star(Bonus):
                 g.bonusState = "star"
                 g.score += 50
                 g.p.wPaddle = 300
+                #ensure that the paddle stays within bounds even if it expands at the rightmost edge
+                if g.p.xPaddle + g.p.wPaddle > width:
+                    g.p.xPaddle -= (g.p.xPaddle + g.p.wPaddle) - width
                 g.p.img=loadImage(path+"huge_board.png")
                         
         
@@ -208,7 +209,7 @@ class Bomb(Bonus):
         self.y += self.vy 
         if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
             if g.bonusState == 'bomb':
-                exit() #make lose condition
+               g.lose = True
             else:
                 g.bonusState = "bomb"
                 g.score -= 50
@@ -311,22 +312,28 @@ class Game:
         for i in range(self.lives):
             image(self.imgLives,20+i*60,550,50,50)
 
-class lvl1(Game):
+class lvl2(Game):
     def __init__(self,w,h,bW,bH):
         Game.__init__(self,w,h,bW,bH,)
-        
         for i in range(3):
-            self.br.append(Bricks(500*i,300*i,150,50,0))
+            self.br.append(Bricks(180*i,50+90*i,150,50,0))
+            self.numBricks += 1
+        for i in range(2):
+            self.br.append(Bricks(300-i*270,50+125*i,150,50,1))
             self.numBricks += 1
         for i in range(3):
-            self.br.append(Bricks(200-i*150, 150*i,150,50,1))
+            self.br.append(Bricks(570-i*200,50+100*i,150,50,2))
             self.numBricks += 1
         for i in range(3):
-            self.br.append(Bricks(375+i*100,75*i,150,50,2))
+            self.br.append(Bricks(270*i+25,350-50*i,150,50,3))
             self.numBricks += 1
-        for i in range(3):
-            self.br.append(Bricks(550-i*200,150*i,150,50,3))
+        for i in range(2):
+            self.br.append(Bricks(570,170+180*i,150,50,2))
             self.numBricks += 1
+        #creating the unbreakable brick
+        self.br[2].v = 4
+        self.br[2].imgs[0] = loadImage(path+"/13.png")
+        self.numUnbreakableBricks += 1
         
     
             
@@ -402,8 +409,12 @@ def draw():
             fill(255,0,0)
             image(img2,300,300,182,137)
             
-    if g.numBricksDestroyed == g.numBricks - g.numUnbreakableBricks:
+    if g.numBricksDestroyed == g.numBricks - g.numUnbreakableBricks and state != "lvl2":
+        state = "lvl2"
         g.win = True
+    elif g.numBricksDestroyed == g.numBricks - g.numUnbreakableBricks and state == "lvl2":
+        g.win = True
+        
             
     if g.lose == True:
         image(loadImage(path+"/gameover.png"),720/4,720/4)
@@ -421,7 +432,9 @@ def draw():
             ball.vx = 0
         g.p.vx_paddle = 0
         
-    elif g.win == True:
+    elif g.win == True and state != "lvl2":
+        g2 = lvl2(720,720,25,25)
+    elif g.win == True and state == "lvl2":
         image(loadImage(path+"/win.gif"),720/4,720/4)
         textSize(40)
         text("Retry",g.w/2.3, g.h-100)
