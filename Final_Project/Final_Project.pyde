@@ -2,7 +2,6 @@ import os,random, time
 add_library('minim')
 path = os.getcwd()+ '/images/'
 player = Minim(this)
-state = "lvl1"
 class Ball():
     def __init__(self,w,h,x,y,vx,vy):
         self.w = w
@@ -22,29 +21,29 @@ class Ball():
              self.vy=-self.vy
              
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
-        if self.y > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: 
-            if self.x < g.p.xPaddle + g.p.wPaddle/2:
+        if self.y > game[level-1].p.yPaddle - (self.h/2)-10  and game[level-1].p.xPaddle<self.x<game[level-1].p.xPaddle+game[level-1].p.wPaddle: 
+            if self.x < game[level-1].p.xPaddle + game[level-1].p.wPaddle/2:
                 self.vx = -15
-            elif self.x > g.p.xPaddle + g.p.wPaddle/2:
+            elif self.x > game[level-1].p.xPaddle + game[level-1].p.wPaddle/2:
                 self.vx = 15
-            elif self.x == g.p.xPaddle + g.p.wPaddle/2:
+            elif self.x == game[level-1].p.xPaddle + game[level-1].p.wPaddle/2:
                 self.vx = 0
             self.vy = -self.vy
             
         #what to do if ball goes below paddle
         if self.y + (self.h/2) > height:
 
-            if len(g.balls) == 1:
-                g.lives -= 1
+            if len(game[level-1].balls) == 1:
+                game[level-1].lives -= 1
             #if the user misses a ball with the bonus ball in play, the don't lose a life but the bonus ball disappears
-            elif len(g.balls) > 1:
-                del g.balls[1]
-            if g.lives == 0:
-                g.lose = True
+            elif len(game[level-1].balls) > 1:
+                del game[level-1].balls[1]
+            if game[level-1].lives == 0:
+                game[level-1].lose = True
             
             self.ballReleased = False
-            self.x=g.p.xPaddle+(g.p.wPaddle/2-15)
-            self.y=g.p.yPaddle-(self.h/2)-10
+            self.x=game[level-1].p.xPaddle+(game[level-1].p.wPaddle/2-15)
+            self.y=game[level-1].p.yPaddle-(self.h/2)-10
             self.vy = 0
             self.vx = 0
             
@@ -55,7 +54,7 @@ class Ball():
              self.vx=-self.vx  
              
         #collisions with bricks
-        for br in g.br:  
+        for br in game[level-1].br:  
             if br.x<self.x<br.x+br.w and (br.y<self.y<br.y+br.h or self.y == br.y) and (br.unlocked == False):
                 if self.x < br.x + br.w/2:
                     self.vx = -10
@@ -70,20 +69,20 @@ class Ball():
                 self.collide.rewind()
                 self.collide.play() 
                 if br.v != 4:
-                    g.score += 10
-                if g.bonusState == "bomb" or g.bonusState == "star" :
+                    game[level-1].score += 10
+                if game[level-1].bonusState == "bomb" or game[level-1].bonusState == "star" :
                     self.bonusCollisions += 1
                     if self.bonusCollisions > 8:
-                        g.p.wPaddle = 200
-                        g.p.img=loadImage(path+"board.png")
+                        game[level-1].p.wPaddle = 200
+                        game[level-1].p.img=loadImage(path+"board.png")
                         self.bonusCollisions = 0
                         
         
             
         #keep the ball on the platform
-        if self.ballReleased == False and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle and self.y==g.p.yPaddle-(g.bH/2)-10 and (g.p.keyHandler[RIGHT] == True or g.p.keyHandler[LEFT] == True):
-            self.x = g.p.xPaddle + g.p.wPaddle/2 -15
-            #print(self.vx)
+        if self.ballReleased == False and game[level-1].p.xPaddle<self.x<game[level-1].p.xPaddle+game[level-1].p.wPaddle and self.y==game[level-1].p.yPaddle-(game[level-1].bH/2)-10 and (game[level-1].p.keyHandler[RIGHT] == True or game[level-1].p.keyHandler[LEFT] == True):
+            self.x = game[level-1].p.xPaddle + game[level-1].p.wPaddle/2 -15
+     
 
    # Update position by adding speed to x and y 
         self.x += self.vx
@@ -145,24 +144,28 @@ class Bricks:
     def display(self):
         stroke(255)
         if self.v<4:
+            
             if self.numCollisions <= 2:
                 image(self.imgs[self.numCollisions],self.x,self.y,self.w,self.h)
             elif self.numCollisions > 2:
-                g.score += 50
-                g.br.remove(self)
-                g.numBricksDestroyed += 1
+                #normal bricks are destroyed after 3 collisions
+                game[level-1].score += 50
+                game[level-1].br.remove(self)
+                game[level-1].numBricksDestroyed += 1
     
         elif self.v == 4:
+            #the unbreakable brick does not change
             image(self.imgs[0],self.x,self.y,self.w,self.h)
         elif self.v == 5:
+            #bonus bricks destroyed after one hit and release bonuses
             if self.numCollisions == 0:
                 image(self.imgs[0],self.x,self.y,self.w,self.h)
             elif self.numCollisions > 0:
-                index = g.br.index(self)
-                g.br[index].unlocked = True
-                if  g.br[index].bonus.y > g.p.yPaddle - (self.h/2):
-                    g.br.remove(self)
-                    g.numBricksDestroyed += 1
+                index = game[level-1].br.index(self)
+                game[level-1].br[index].unlocked = True
+                if  game[level-1].br[index].bonus.y > game[level-1].p.yPaddle - (self.h/2):
+                    game[level-1].br.remove(self)
+                    game[level-1].numBricksDestroyed += 1
                     
 class Bonus:
     def __init__(self,x,y,w,h,vy):
@@ -177,7 +180,7 @@ class Bonus:
    
     def display(self):
         self.update()
-        for bricks in g.br:
+        for bricks in game[level-1].br:
                 image(self.img,self.x,self.y,self.w,self.h)
                 
 class Star(Bonus):
@@ -187,17 +190,20 @@ class Star(Bonus):
         
     def update(self): 
         self.y += self.vy 
-        if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
-            if g.bonusState == "star":
-                g.balls.append(Ball(g.bW,g.bH,g.balls[0].x,g.balls[0].x,-g.balls[0].vx,g.balls[0].vy))
+        #if the star is captured
+        if self.y > game[level-1].p.yPaddle - (self.h/2)-10 and game[level-1].p.xPaddle<self.x<game[level-1].p.xPaddle+game[level-1].p.wPaddle:
+            #if you are currently in a bonus the ball will split
+            if game[level-1].bonusState == "star":
+                game[level-1].balls.append(Ball(game[level-1].bW,game[level-1].bH,game[level-1].balls[0].x,game[level-1].balls[0].x,-game[level-1].balls[0].vx,game[level-1].balls[0].vy))
             else:
-                g.bonusState = "star"
-                g.score += 50
-                g.p.wPaddle = 300
+                #if it is the first bonus then the paddle will expand
+                game[level-1].bonusState = "star"
+                game[level-1].score += 50
+                game[level-1].p.wPaddle = 300
                 #ensure that the paddle stays within bounds even if it expands at the rightmost edge
-                if g.p.xPaddle + g.p.wPaddle > width:
-                    g.p.xPaddle -= (g.p.xPaddle + g.p.wPaddle) - width
-                g.p.img=loadImage(path+"huge_board.png")
+                if game[level-1].p.xPaddle + game[level-1].p.wPaddle > width:
+                    game[level-1].p.xPaddle -= (game[level-1].p.xPaddle + game[level-1].p.wPaddle) - width
+                game[level-1].p.img=loadImage(path+"huge_board.png")
                         
         
 class Bomb(Bonus):
@@ -207,18 +213,20 @@ class Bomb(Bonus):
     
     def update(self): 
         self.y += self.vy 
-        if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
-            if g.bonusState == 'bomb':
-               g.lose = True
+        if self.y > game[level-1].p.yPaddle - (self.h/2)-10 and game[level-1].p.xPaddle<self.x<game[level-1].p.xPaddle+game[level-1].p.wPaddle:
+            #if it the second bomb captured whilst already a smaller brick then game over
+            if game[level-1].bonusState == 'bomb':
+               game[level-1].lose = True
             else:
-                g.bonusState = "bomb"
-                g.score -= 50
-                g.p.wPaddle = 150
-                g.p.img=loadImage(path+"small_board.png")
+                #if it is the first brick then the paddle decreases in size
+                game[level-1].bonusState = "bomb"
+                game[level-1].score -= 50
+                game[level-1].p.wPaddle = 150
+                game[level-1].p.img=loadImage(path+"small_board.png")
     
             
 class Game:
-    def __init__(self,w,h,bW,bH):
+    def __init__(self,w,h,bW,bH,level):
         self.w=w
         self.h=h
         self.bW = bW
@@ -241,62 +249,114 @@ class Game:
         self.lives = 3
         self.win = False
         self.lose = False
+        self.level = level
 
-        #creating the bricks on the screen 
-        for i in range(2):
-            self.br.append(Bricks(500*i,300*i,150,50,0))
-            self.numBricks += 1
-        for i in range(2):
-            self.br.append(Bricks(200-i*150, 150*i,150,50,1))
-            self.numBricks += 1
-        for i in range(3):
-            self.br.append(Bricks(375+i*100,75*i,150,50,2))
-            self.numBricks += 1
-        for i in range(3):
-            self.br.append(Bricks(550-i*200,150*i,150,50,3))
-            self.numBricks += 1
-        
-        #creating the unbreakable brick
-        self.br[8].v = 4
-        self.br[8].imgs[0] = loadImage(path+"/13.png")
-        self.numUnbreakableBricks += 1     
-        
-         #creating star bricks in random positions                   
-        randBonus = random.randint(0,len(self.br)-1)
-        numRandBonus = 0
-        while numRandBonus < 2:
-            #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
-            while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
-                randBonus = random.randint(0,len(self.br)-1)
-                
-            self.br[randBonus].v = 5
-            self.br[randBonus].imgs[0] = loadImage(path+"/14.png")
-            self.br[randBonus].bonus = Star(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,30,30,15)
-            numRandBonus += 1
-          
-          #creating bomb bricks in random positions  
-        randBonus = random.randint(0,len(self.br)-1)
-        numRandBonus = 0
-        while numRandBonus < 2:
-            #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
-            while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
-                randBonus = random.randint(0,len(self.br)-1)
+        if self.level == 1:
+            #creating the bricks on the screen 
+            for i in range(2):
+                self.br.append(Bricks(500*i,300*i,150,50,0))
+                self.numBricks += 1
+            for i in range(2):
+                self.br.append(Bricks(200-i*150, 150*i,150,50,1))
+                self.numBricks += 1
+            for i in range(3):
+                self.br.append(Bricks(375+i*100,75*i,150,50,2))
+                self.numBricks += 1
+            for i in range(3):
+                self.br.append(Bricks(550-i*200,150*i,150,50,3))
+                self.numBricks += 1
             
-            self.br[randBonus].v = 5
-            self.br[randBonus].imgs[0] = loadImage(path+"/15.png")
-            self.br[randBonus].bonus = Bomb(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,40,40,15)
-            numRandBonus += 1
+            #creating the unbreakable brick
+            self.br[8].v = 4
+            self.br[8].imgs[0] = loadImage(path+"/13.png")
+            self.numUnbreakableBricks += 1     
+            
+            #creating star bricks in random positions                   
+            randBonus = random.randint(0,len(self.br)-1)
+            numRandBonus = 0
+            while numRandBonus < 2:
+                #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
+                while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
+                    randBonus = random.randint(0,len(self.br)-1)
+                    
+                self.br[randBonus].v = 5
+                self.br[randBonus].imgs[0] = loadImage(path+"/14.png")
+                self.br[randBonus].bonus = Star(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,30,30,15)
+                numRandBonus += 1
         
-        #intialising a list with one ball at the beginning of the game
-        while len(self.balls) < 1:
-            self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(bH/2)-10,0,0))
+            #creating bomb bricks in random positions  
+            randBonus = random.randint(0,len(self.br)-1)
+            numRandBonus = 0
+            while numRandBonus < 2:
+                #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
+                while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
+                    randBonus = random.randint(0,len(self.br)-1)
+                
+                self.br[randBonus].v = 5
+                self.br[randBonus].imgs[0] = loadImage(path+"/15.png")
+                self.br[randBonus].bonus = Bomb(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,40,40,15)
+                numRandBonus += 1
+        
+            #intialising a list with one ball at the beginning of the game
+            while len(self.balls) < 1:
+                self.balls.append(Ball(self.bW,self.bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(self.bH/2)-10,0,0))
+        elif self.level == 2:
+            for i in range(3):
+                self.br.append(Bricks(180*i,50+90*i,150,50,0))
+                self.numBricks += 1
+            for i in range(2):
+                self.br.append(Bricks(300-i*270,50+125*i,150,50,1))
+                self.numBricks += 1
+            for i in range(3):
+                self.br.append(Bricks(570-i*200,50+100*i,150,50,2))
+                self.numBricks += 1
+            for i in range(3):
+                self.br.append(Bricks(270*i+25,350-50*i,150,50,3))
+                self.numBricks += 1
+            for i in range(2):
+                self.br.append(Bricks(570,170+180*i,150,50,2))
+                self.numBricks += 1
+            
+            #creating the unbreakable brick
+            self.br[2].v = 4
+            self.br[2].imgs[0] = loadImage(path+"/13.png")
+            self.numUnbreakableBricks += 1
+                
+            #creating star bricks in random positions                   
+            randBonus = random.randint(0,len(self.br)-1)
+            numRandBonus = 0
+            while numRandBonus < 2:
+                #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
+                while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
+                    randBonus = random.randint(0,len(self.br)-1)
+                        
+                self.br[randBonus].v = 5
+                self.br[randBonus].imgs[0] = loadImage(path+"/14.png")
+                self.br[randBonus].bonus = Star(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,30,30,15)
+                numRandBonus += 1
+            
+            #creating bomb bricks in random positions  
+            randBonus = random.randint(0,len(self.br)-1)
+            numRandBonus = 0
+            while numRandBonus < 2:
+                #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
+                while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
+                    randBonus = random.randint(0,len(self.br)-1)
+                
+                self.br[randBonus].v = 5
+                self.br[randBonus].imgs[0] = loadImage(path+"/15.png")
+                self.br[randBonus].bonus = Bomb(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,40,40,15)
+                numRandBonus += 1
+        
+            #intialising a list with one ball at the beginning of the game
+            while len(self.balls) < 1:
+                self.balls.append(Ball(self.bW,self.bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(self.bH/2)-10,0,0))
         
     def display(self):    
-        image(self.img,0,0,g.w,g.h)
-        #rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
+        image(self.img,0,0,game[level-1].w,game[level-1].h)
         self.p.display()
         textSize(30)
-        text("Score: " + str(g.score),20,640)
+        text("Score: " + str(game[level-1].score),20,640)
         
         for b in self.balls:
             b.display() 
@@ -311,201 +371,184 @@ class Game:
         
         for i in range(self.lives):
             image(self.imgLives,20+i*60,550,50,50)
-
-class lvl2(Game):
-    def __init__(self,w,h,bW,bH):
-        Game.__init__(self,w,h,bW,bH,)
-        for i in range(3):
-            self.br.append(Bricks(180*i,50+90*i,150,50,0))
-            self.numBricks += 1
-        for i in range(2):
-            self.br.append(Bricks(300-i*270,50+125*i,150,50,1))
-            self.numBricks += 1
-        for i in range(3):
-            self.br.append(Bricks(570-i*200,50+100*i,150,50,2))
-            self.numBricks += 1
-        for i in range(3):
-            self.br.append(Bricks(270*i+25,350-50*i,150,50,3))
-            self.numBricks += 1
-        for i in range(2):
-            self.br.append(Bricks(570,170+180*i,150,50,2))
-            self.numBricks += 1
-        #creating the unbreakable brick
-        self.br[2].v = 4
-        self.br[2].imgs[0] = loadImage(path+"/13.png")
-        self.numUnbreakableBricks += 1
-        
     
-            
         
 imgin1=loadImage(path+"Instruction1.png")
 imgin2=loadImage(path+"Instruction2.png")
 img=loadImage(path+"background.png") 
 img2=loadImage(path+"pause.png")  
-def setup():
-    size(g.w,g.h)
 
-g = Game(720,720,25,25)
+
+level = 1
+game = []
+def setup():
+    size(720, 720)
+    for g in range(1,3):
+        game.append(Game(720,720,25,25,g)) 
+    
 
 def draw():
+    global level
     global img, img2, imgin1, imgin2
-    if g.state == "menu":
+    
+    if level == 2 and game[level-1].state != "play":
+        game[level-1].state = "play"
+    
+    if game[level-1].state == "menu":
        # background(0)
-        image(img,0,0,g.w,g.h)
+        image(img,0,0,game[level-1].w,game[level-1].h)
         textSize(50)
-        text("Brick Breaker",g.w//3-50, g.h//3-40)
+        text("Brick Breaker",game[level-1].w//3-50, game[level-1].h//3-40)
         textSize(36)
-        text("Play Game",g.w//2.8, g.h//2.8+40)
-        text("Instructions", g.w//2.8, g.h//2.8+140)  
-        if g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
+        text("Play Game",game[level-1].w//2.8, game[level-1].h//2.8+40)
+        text("Instruction", game[level-1].w//2.8, game[level-1].h//2.8+140)  
+        if game[level-1].w//2.8 < mouseX < game[level-1].w//2.8 + 220 and game[level-1].h//2.8 < mouseY < game[level-1].h//2.8+50:
             fill(255,0,0)
-            text("Play Game",g.w//2.8, g.h//2.8+40)
+            text("Play Game",game[level-1].w//2.8, game[level-1].h//2.8+40)
             fill(255)
-        elif g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
+        elif game[level-1].w//2.8 < mouseX < game[level-1].w//2.8 + 220 and game[level-1].h//2.8+100 < mouseY < game[level-1].h//2.8+150:
             fill(255,0,0)    
-            text("Instructions", g.w//2.8, g.h//2.8+140)    
+            text("Instructions", game[level-1].w//2.8, game[level-1].h//2.8+140)    
             fill(255)
     
-    elif g.state == "instruction2":
-        image(imgin2,0,0,g.w,g.h)
-        text("Menu",g.w//4, g.h//3+400)
-        text("Previous Page",g.w-300, g.h//3+400)
+    elif game[level-1].state == "instruction2":
+        image(imgin2,0,0,game[level-1].w,game[level-1].h)
+        text("Menu",game[level-1].w//4, game[level-1].h//3+400)
+        text("Previous Page",game[level-1].w-300, game[level-1].h//3+400)
         
-        if  g.w//4-50 < mouseX < g.w//4+100 and g.h//3+350 < mouseY < g.h//3+450:
+        if  game[level-1].w//4-50 < mouseX < game[level-1].w//4+100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+450:
             fill(255,0,0) 
             textSize(40)
-            text("Menu",g.w//4, g.h//3+400)
+            text("Menu",game[level-1].w//4, game[level-1].h//3+400)
             fill(255)
             
-        if  g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
+        if  game[level-1].w-350 < mouseX < game[level-1].w-100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+500:
             fill(255,0,0) 
             textSize(40)
-            text("Previous Page",g.w-300, g.h//3+400)
+            text("Previous Page",game[level-1].w-300, game[level-1].h//3+400)
             fill(255)    
-    elif g.state == "instruction":
+    elif game[level-1].state == "instruction":
         #background(0)
-        image(imgin1,0,0,g.w,g.h)
-        text("Next Page",g.w-300, g.h//3+400)
-        text("Menu",g.w//4, g.h//3+400)
-        if  g.w//4-50 < mouseX < g.w//4+100 and g.h//3+350 < mouseY < g.h//3+450:
+        image(imgin1,0,0,game[level-1].w,game[level-1].h)
+        text("Next Page",game[level-1].w-300, game[level-1].h//3+400)
+        text("Menu",game[level-1].w//4, game[level-1].h//3+400)
+        if  game[level-1].w//4-50 < mouseX < game[level-1].w//4+100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+450:
             fill(255,0,0) 
             textSize(40)
-            text("Menu",g.w//4, g.h//3+400)
+            text("Menu",game[level-1].w//4, game[level-1].h//3+400)
             fill(255)
-           # text("Next Page",g.w-300, g.h//3+400)
-        if  g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
+           # text("Next Page",game[level-1].w-300, game[level-1].h//3+400)
+        if  game[level-1].w-350 < mouseX < game[level-1].w-100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+500:
             fill(255,0,0) 
             textSize(40)
-            text("Next Page",g.w-300, g.h//3+400)
+            text("Next Page",game[level-1].w-300, game[level-1].h//3+400)
             fill(255)
                     
-    elif g.state == "play":
-        if g.pause == False:
-       
+    elif game[level-1].state == "play":
+        if game[level-1].pause == False:
+
             background(255)
-            g.display()
+            game[level-1].display()
         else:
       
             fill(255,0,0)
             image(img2,300,300,182,137)
             
-    if g.numBricksDestroyed == g.numBricks - g.numUnbreakableBricks and state != "lvl2":
-        state = "lvl2"
-        g.win = True
-    elif g.numBricksDestroyed == g.numBricks - g.numUnbreakableBricks and state == "lvl2":
-        g.win = True
+    if game[level-1].numBricksDestroyed == game[level-1].numBricks - game[level-1].numUnbreakableBricks:
+        game[level-1].win = True
+        if level == 1:
+            level += 1
+
+        return
         
             
-    if g.lose == True:
+    if game[level-1].lose == True:
         image(loadImage(path+"/gameover.png"),720/4,720/4)
         textSize(40)
-        text("Retry",g.w/2.3, g.h-100)
-        if  g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+        text("Retry",game[level-1].w/2.3, game[level-1].h-100)
+        if  game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
             fill(255,0,0) 
             textSize(40)
-            text("Retry",g.w/2.3, g.h-100)
+            text("Retry",game[level-1].w/2.3, game[level-1].h-100)
             fill(255)
         
-        for ball in g.balls:
+        for ball in game[level-1].balls:
             ball.ballReleased = True
             ball.vy = 0
             ball.vx = 0
-        g.p.vx_paddle = 0
+        game[level-1].p.vx_paddle = 0
         
-    elif g.win == True and state != "lvl2":
-        g2 = lvl2(720,720,25,25)
-    elif g.win == True and state == "lvl2":
+    if game[level-1].win == True:
         image(loadImage(path+"/win.gif"),720/4,720/4)
         textSize(40)
-        text("Retry",g.w/2.3, g.h-100)
-        if  g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+        text("Retry",game[level-1].w/2.3, game[level-1].h-100)
+        if  game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
             fill(255,0,0) 
             textSize(40)
-            text("Retry",g.w/2.3, g.h-100)
+            text("Retry",game[level-1].w/2.3, game[level-1].h-100)
             fill(255)
-        for ball in g.balls:
+        for ball in game[level-1].balls:
             ball.ballReleased = True
             ball.vy = 0
             ball.vx = 0
-        g.p.vx_paddle = 0
+        game[level-1].p.vx_paddle = 0
         
 def mouseClicked():
     #Page Menu
-    if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
-        g.state="play"
-    elif g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8+100 < mouseY < g.h//2.8+150:
-        g.state="instruction"
+    if game[level-1].state == "menu" and game[level-1].w//2.8 < mouseX < game[level-1].w//2.8 + 220 and game[level-1].h//2.8 < mouseY < game[level-1].h//2.8+50:
+        game[level-1].state="play"
+    elif game[level-1].state == "menu" and game[level-1].w//2.8 < mouseX < game[level-1].w//2.8 + 220 and game[level-1].h//2.8+100 < mouseY < game[level-1].h//2.8+150:
+        game[level-1].state="instruction"
      
     #Page Instruction
-    elif g.state == "instruction" and g.w//4-50 < mouseX < g.w//4+100 and g.h//3+350 < mouseY < g.h//3+450:
-        g.state="menu"
-    elif g.state == "instruction" and g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
-        g.state="instruction2"
-      #  print("LLL")
+    elif game[level-1].state == "instruction" and game[level-1].w//4-50 < mouseX < game[level-1].w//4+100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+450:
+        game[level-1].state="menu"
+    elif game[level-1].state == "instruction" and game[level-1].w-350 < mouseX < game[level-1].w-100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+500:
+        game[level-1].state="instruction2"
+
      
     #Page Instruction2   
-    elif g.state == "instruction2" and g.w-350 < mouseX < g.w-100 and g.h//3+350 < mouseY < g.h//3+500:
-        g.state="instruction"
-    elif g.state == "instruction2" and g.w//2.5-100 < mouseX < g.w//2.5+100 and g.h//3+350 < mouseY < g.h//3+450:
-        g.state="menu"
+    elif game[level-1].state == "instruction2" and game[level-1].w-350 < mouseX < game[level-1].w-100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+500:
+        game[level-1].state="instruction"
+    elif game[level-1].state == "instruction2" and game[level-1].w//2.5-100 < mouseX < game[level-1].w//2.5+100 and game[level-1].h//3+350 < mouseY < game[level-1].h//3+450:
+        game[level-1].state="menu"
         
-    elif g.state == "play" and g.lose == True and g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+    elif game[level-1].state == "play" and game[level-1].lose == True and game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
         print("lose")
-        g.__init__(720,720,25,25)
+        game[level-1].__init__(720,720,25,25,level)
        
-    elif g.state == "play" and g.win == True and g.w/2.3-100 < mouseX < g.w/2.3+100 and g.h-180 < mouseY < g.h-80:
+    elif game[level-1].state == "play" and game[level-1].win == True and game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
         print("win")
-        g.__init__(720,720,25,25)
-       # g.state="menu"
+        game[level-1].__init__(720,720,25,25,level)
+       # game[level-1].state="menu"
        
  
 def keyPressed():
     if keyCode == RIGHT:
-        g.p.keyHandler[RIGHT] = True
+        game[level-1].p.keyHandler[RIGHT] = True
     elif keyCode == LEFT:
-        g.p.keyHandler[LEFT] = True
+        game[level-1].p.keyHandler[LEFT] = True
     elif keyCode == UP:
-        for balls in g.balls: 
+        for balls in game[level-1].balls: 
             if balls.ballReleased == False:
-                for ball in g.balls: 
+                for ball in game[level-1].balls: 
                     ball.vx = 0.0001 
                     ball.vy = -15
                     ball.ballReleased = True
     elif keyCode == 80:
-        print("aaa")
-        g.pauseSound.rewind()
-        g.pauseSound.play()
+   
+        game[level-1].pauseSound.rewind()
+        game[level-1].pauseSound.play()
         
-        if g.pause:
-            g.music.play()
-     
+        if game[level-1].pause:
+            game[level-1].music.play()
         else:
-            g.music.pause()
+            game[level-1].music.pause()
         
-        g.pause = not g.pause
+        game[level-1].pause = not game[level-1].pause
 
 def keyReleased():
     if keyCode == RIGHT:
-        g.p.keyHandler[RIGHT] = False
+        game[level-1].p.keyHandler[RIGHT] = False
     elif keyCode == LEFT:
-        g.p.keyHandler[LEFT] = False
+        game[level-1].p.keyHandler[LEFT] = False
