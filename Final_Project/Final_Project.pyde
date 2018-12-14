@@ -20,7 +20,7 @@ class Ball():
         #make sure the ball doesn't go outrange// <0 b/c top left is 0,0
         if self.y - (self.h/2) <0:  
              self.vy=-self.vy
-    
+             
         #allowing ball to bounce on paddle and then changing direction based on where it bounces
         if self.y > g.p.yPaddle - (self.h/2)-10  and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle: 
             if self.x < g.p.xPaddle + g.p.wPaddle/2:
@@ -57,9 +57,10 @@ class Ball():
                 self.vy = -self.vy
                 br.numCollisions += 1
                 self.collide.rewind()
-                self.collide.play()  
-              #  if self.v<4 or self.v ==5:
-              #      self.grade += 10
+                self.collide.play() 
+                if br.v != 4:
+                    g.score += 10
+                
         
         #keep the ball on the platform
         if self.ballReleased == False and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle and self.y==g.p.yPaddle-(g.bH/2)-10 and (g.p.keyHandler[RIGHT] == True or g.p.keyHandler[LEFT] == True):
@@ -113,19 +114,17 @@ class Bricks:
         self.y = y
         self.v = v
         self.numCollisions = 0
-        self.grade=0
         self.imgs = []
         self.unlocked = False
         self.bonus = "" 
-        
         
         if self.v < 4:
             for i in range(4):
                 self.imgs.append(loadImage(path+"/"+str(v+i*4)+".png"))
         elif self.v == 4:
             self.imgs.append(loadImage(path+"/13.png"))
-        elif self.v == 5:
-            self.imgs.append(loadImage(path+"/14.png"))
+        # elif self.v == 5:
+        #     self.imgs.append(loadImage(path+"/14.png"))
         
     def display(self):
         stroke(255)
@@ -133,8 +132,9 @@ class Bricks:
             if self.numCollisions <= 2:
                 image(self.imgs[self.numCollisions],self.x,self.y,self.w,self.h)
             elif self.numCollisions > 2:
+                g.score += 50
                 g.br.remove(self)
-                self.grade+=10
+    
         elif self.v == 4:
             image(self.imgs[0],self.x,self.y,self.w,self.h)
         elif self.v == 5:
@@ -146,30 +146,33 @@ class Bricks:
                 if  g.br[index].bonus.y > g.p.yPaddle - (self.h/2)-10:
                     g.br.remove(self)
                     
-                self.grade+=10
-                #can't just remove this, stars will not show up
-                #even without this line, stars also don't show up some times 
-                        
-class Star:
+class Bonus:
     def __init__(self,x,y,w,h,vy):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
         self.vy = vy
-        self.img = loadImage(path+"/star.png")
         
     def update(self):
         self.y += self.vy
-        if self.y > g.p.yPaddle - (self.h/2)-10 and g.p.xPaddle<self.x<g.p.xPaddle+g.p.wPaddle:
-            for bricks in g.br:
-                if bricks.unlocked == True:
-                    bricks.bonus.img = None
+   
     def display(self):
         self.update()
         for bricks in g.br:
-            if bricks.unlocked == True and bricks.bonus.img != None:
+            if bricks.unlocked == True : #and bricks.bonus.img != None
                 image(self.img,self.x,self.y,self.w,self.h)
+                
+class Star(Bonus):
+    def __init__(self,x,y,w,h,vy):
+        Bonus.__init__(self,x,y,w,h,vy)
+        self.img = loadImage(path+"/star.png")
+                        
+        
+class Bomb(Bonus):
+    def __init__(self,x,y,w,h,vy):
+        Bonus.__init__(self,x,y,w,h,vy)
+        self.img = loadImage(path+"/bomb.png")
 
         
 class Game:
@@ -188,6 +191,7 @@ class Game:
         self.music.loop()
         self.pause=False
         self.pauseSound = player.loadFile(path+"/sounds/pause.mp3")
+        self.score = 0
             
         for i in range(2):
             self.br.append(Bricks(500*i,300*i,150,50,0))
@@ -203,7 +207,21 @@ class Game:
             
         self.br[8].v = 4
         self.br[8].imgs[0] = loadImage(path+"/13.png")     
-                           
+        
+         #creating star bricks in random positions                   
+        randBonus = random.randint(0,len(self.br)-1)
+        numRandBonus = 0
+        while numRandBonus < 2:
+            #making sure brick has not already been assigned a bonus and it is not the unbreakable brick
+            while self.br[randBonus].v == 4 or self.br[randBonus].bonus != "":
+                randBonus = random.randint(0,len(self.br)-1)
+                
+            self.br[randBonus].v = 5
+            self.br[randBonus].imgs[0] = loadImage(path+"/14.png")
+            self.br[randBonus].bonus = Star(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,30,30,15)
+            numRandBonus += 1
+          
+          #creating bomb bricks in random positions  
         randBonus = random.randint(0,len(self.br)-1)
         numRandBonus = 0
         while numRandBonus < 2:
@@ -212,22 +230,20 @@ class Game:
                 randBonus = random.randint(0,len(self.br)-1)
                 
             self.br[randBonus].v = 5
-            self.br[randBonus].imgs[0] = loadImage(path+"/14.png")
-            self.br[randBonus].bonus = Star(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,30,30,15)
+            self.br[randBonus].imgs[0] = loadImage(path+"/15.png")
+            self.br[randBonus].bonus = Bomb(self.br[randBonus].x+(self.br[randBonus].w/2),self.br[randBonus].y+self.br[randBonus].h,40,40,15)
             numRandBonus += 1
             
         while len(self.balls) < 1:
             self.balls.append(Ball(bW,bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(bH/2)-10,0,0))
-        
-        
         
     def display(self):    
         image(self.img,0,0,g.w,g.h)
         #rect(self.p.xPaddle,self.p.yPaddle,self.p.wPaddle,self.p.hPaddle)
         self.p.display()
         textSize(30)
-        text("Highest Score:",20,600)
-        text("Score:",20,640)
+        #text("Highest Score:",20,600)
+        text("Score: " + str(g.score),20,640)
         
         #text(str(self.Bricks.grade),70,620)
         for b in self.balls:
@@ -249,7 +265,6 @@ g = Game(720,720,25,25,4)
 def draw():
     global img
     if g.state == "menu":
-       # background(0)
         image(img,0,0,g.w,g.h)
         textSize(50)
         text("Brick Breaker",g.w//3-50, g.h//3-40)
@@ -288,7 +303,6 @@ def draw():
             textSize(50)
             text("Paused",300,360)
             
-        
 def mouseClicked():
     if g.state == "menu" and g.w//2.8 < mouseX < g.w//2.8 + 220 and g.h//2.8 < mouseY < g.h//2.8+50:
         g.state="play"
