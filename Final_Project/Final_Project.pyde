@@ -47,8 +47,6 @@ class Ball():
             self.vy = 0
             self.vx = 0
             
-        
-           
         #make sure ball stays inside width of box
         if self.x + (self.w/2) > width or self.x - (self.w/2) <0:
              self.vx=-self.vx  
@@ -76,6 +74,7 @@ class Ball():
                         game[level-1].p.wPaddle = 200
                         game[level-1].p.img=loadImage(path+"board.png")
                         self.bonusCollisions = 0
+                        game[level-1].bonusState = "" 
                         
         
             
@@ -152,6 +151,7 @@ class Bricks:
                 game[level-1].score += 50
                 game[level-1].br.remove(self)
                 game[level-1].numBricksDestroyed += 1
+                
     
         elif self.v == 4:
             #the unbreakable brick does not change
@@ -240,7 +240,6 @@ class Game:
         self.numUnbreakableBricks = 0
         self.img=loadImage(path+"background.png")
         self.music = player.loadFile(path+"/sounds/music.mp3")
-        self.music.loop()
         self.pause=False
         self.pauseSound = player.loadFile(path+"/sounds/pause.mp3")
         self.score = 0
@@ -252,6 +251,7 @@ class Game:
         self.level = level
 
         if self.level == 1:
+            self.music.loop()
             #creating the bricks on the screen 
             for i in range(2):
                 self.br.append(Bricks(500*i,300*i,150,50,0))
@@ -301,6 +301,8 @@ class Game:
             while len(self.balls) < 1:
                 self.balls.append(Ball(self.bW,self.bH,self.p.xPaddle+(self.p.wPaddle/2-15),self.p.yPaddle-(self.bH/2)-10,0,0))
         elif self.level == 2:
+            
+            self.score = score
             for i in range(3):
                 self.br.append(Bricks(180*i,50+90*i,150,50,0))
                 self.numBricks += 1
@@ -381,6 +383,7 @@ img2=loadImage(path+"pause.png")
 
 level = 1
 game = []
+score = 0
 def setup():
     size(720, 720)
     for g in range(1,3):
@@ -388,7 +391,7 @@ def setup():
     
 
 def draw():
-    global level
+    global level,score
     global img, img2, imgin1, imgin2
     
     if level == 2 and game[level-1].state != "play":
@@ -453,12 +456,18 @@ def draw():
       
             fill(255,0,0)
             image(img2,300,300,182,137)
-            
+        
     if game[level-1].numBricksDestroyed == game[level-1].numBricks - game[level-1].numUnbreakableBricks:
-        game[level-1].win = True
         if level == 1:
+            game[level].score = game[level-1].score
+            game[level].lives = game[level-1].lives
+            game[level].music.pause()
             level += 1
-        return
+        
+        elif level == 2:
+            game[level-1].win = True
+        
+    
         
     if game[level-1].lose == True:
         image(loadImage(path+"/gameover.png"),720/4,720/4)
@@ -479,12 +488,6 @@ def draw():
     if game[level-1].win == True:
         image(loadImage(path+"/win.gif"),720/4,720/4)
         textSize(40)
-        text("Retry",game[level-1].w/2.3, game[level-1].h-100)
-        if  game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
-            fill(255,0,0) 
-            textSize(40)
-            text("Retry",game[level-1].w/2.3, game[level-1].h-100)
-            fill(255)
         for ball in game[level-1].balls:
             ball.ballReleased = True
             ball.vy = 0
@@ -512,13 +515,8 @@ def mouseClicked():
         game[level-1].state="menu"
         
     elif game[level-1].state == "play" and game[level-1].lose == True and game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
-        print("lose")
         game[level-1].__init__(720,720,25,25,level)
-       
-    elif game[level-1].state == "play" and game[level-1].win == True and game[level-1].w/2.3-100 < mouseX < game[level-1].w/2.3+100 and game[level-1].h-180 < mouseY < game[level-1].h-80:
-        print("win")
-        game[level-1].__init__(720,720,25,25,level)
-       # game[level-1].state="menu"
+        game[level-1].music.pause()
        
  
 def keyPressed():
